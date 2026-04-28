@@ -21,6 +21,7 @@ export interface Abonne {
   type_abonne: string;
   type_abonne_arabe: string | null;
   num_serie: string;
+  tournee: string;
 }
 
 export interface DossierRecherche {

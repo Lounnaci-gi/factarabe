@@ -166,7 +166,8 @@ app.get('/api/abonne/:numab', async (req, res) => {
     ndom_arabe: null,
     type_abonne: typeAbonneStr,
     type_abonne_arabe: null,
-    num_serie: numSerie
+    num_serie: numSerie,
+    tournee: abonneRecord.TOURNEE ? abonneRecord.TOURNEE.toString().trim() : "N/A"
   };
 
   const factures = facturesMap.get(numab) || [];
