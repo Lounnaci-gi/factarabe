@@ -21,11 +21,25 @@ export const AbonneCard: React.FC<AbonneCardProps> = ({ abonne }) => {
     setTypeAbonneArabe(abonne.type_abonne_arabe || '');
   }, [abonne]);
 
-  const handleSaveArabe = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleSaveArabe = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      // Simulation d'une sauvegarde en base de données SQL
-      setIsSaved(true);
-      setTimeout(() => setIsSaved(false), 2000);
+      try {
+        await fetch(`http://localhost:3001/api/abonne/${abonne.numab}/traduction`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            nom_arabe: nomArabe || null,
+            rue_arabe: rueArabe || null,
+            bloc_arabe: blocArabe || null,
+            ndom_arabe: ndomArabe || null,
+            type_abonne_arabe: typeAbonneArabe || null,
+          }),
+        });
+        setIsSaved(true);
+        setTimeout(() => setIsSaved(false), 2500);
+      } catch {
+        console.error('Erreur de sauvegarde de la traduction');
+      }
     }
   };
 

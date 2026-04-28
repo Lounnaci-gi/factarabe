@@ -2,9 +2,25 @@ import express from 'express';
 import cors from 'cors';
 import { DBFFile } from 'dbffile';
 import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const TRANSLATIONS_FILE = path.join(__dirname, 'translations.json');
+
+// Charge ou initialise le fichier de traductions
+let translationsDB = {};
+if (fs.existsSync(TRANSLATIONS_FILE)) {
+  try { translationsDB = JSON.parse(fs.readFileSync(TRANSLATIONS_FILE, 'utf-8')); } catch { translationsDB = {}; }
+}
+
+const saveTranslations = () => {
+  fs.writeFileSync(TRANSLATIONS_FILE, JSON.stringify(translationsDB, null, 2), 'utf-8');
+};
 
 const app = express();
 app.use(cors());
+app.use(express.json());
 
 // Mettre en mémoire cache la base Abonnés (10MB c'est très rapide)
 let abonnesMap = new Map();
@@ -155,17 +171,19 @@ app.get('/api/abonne/:numab', async (req, res) => {
 
   const numSerie = abonmentsMap.get(numab)?.NUMSER ? abonmentsMap.get(numab).NUMSER.toString().trim() : "Inconnu";
 
+  const t = translationsDB[numab] || {};
+
   const abonne = {
     numab: numab,
     nom_prenom: abonneRecord.RAISOC || "Nom inconnu",
-    nom_arabe: abonneRecord.RAISOCA || null, // Déjà présent dans le DBF EPEOR !
+    nom_arabe: t.nom_arabe || abonneRecord.RAISOCA || null,
     adresse: adresseStr,
-    ville: "---", // La ville dépend de RUE.DBF qu'on ne charge pas encore
-    rue_arabe: typeof nomRueArabe === 'string' && nomRueArabe.trim() !== '' ? nomRueArabe.trim() : null,
-    bloc_arabe: null,
-    ndom_arabe: null,
+    ville: "---",
+    rue_arabe: t.rue_arabe || (typeof nomRueArabe === 'string' && nomRueArabe.trim() !== '' ? nomRueArabe.trim() : null),
+    bloc_arabe: t.bloc_arabe || null,
+    ndom_arabe: t.ndom_arabe || null,
     type_abonne: typeAbonneStr,
-    type_abonne_arabe: null,
+    type_abonne_arabe: t.type_abonne_arabe || null,
     num_serie: numSerie,
     tournee: abonneRecord.TOURNEE ? abonneRecord.TOURNEE.toString().trim() : "N/A"
   };
@@ -176,6 +194,24 @@ app.get('/api/abonne/:numab', async (req, res) => {
     abonne,
     factures
   });
+});
+
+// POST : Sauvegarde les traductions arabes d'un abonné
+app.post('/api/abonne/:numab/traduction', (req, res) => {
+  const numab = req.params.numab.toUpperCase();
+  const { nom_arabe, rue_arabe, bloc_arabe, ndom_arabe, type_abonne_arabe } = req.body;
+
+  if (!translationsDB[numab]) translationsDB[numab] = {};
+
+  if (nom_arabe !== undefined) translationsDB[numab].nom_arabe = nom_arabe;
+  if (rue_arabe !== undefined) translationsDB[numab].rue_arabe = rue_arabe;
+  if (bloc_arabe !== undefined) translationsDB[numab].bloc_arabe = bloc_arabe;
+  if (ndom_arabe !== undefined) translationsDB[numab].ndom_arabe = ndom_arabe;
+  if (type_abonne_arabe !== undefined) translationsDB[numab].type_abonne_arabe = type_abonne_arabe;
+
+  saveTranslations();
+  console.log(`✅ Traductions sauvegardées pour ${numab}:`, translationsDB[numab]);
+  res.json({ success: true, numab, traduction: translationsDB[numab] });
 });
 
 app.listen(3001, () => {
