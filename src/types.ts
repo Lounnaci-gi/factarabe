@@ -3,9 +3,10 @@ export interface Facture {
   numab: string;
   montant: number;
   date_fact: string;
-  date_reglement: string | null; // null si non payée
+  date_reglement: string | null;
   montant_paye: number;
   etat_cpt: string;
+  periode_label: string;
 }
 
 export interface Abonne {
@@ -19,6 +20,7 @@ export interface Abonne {
   ndom_arabe: string | null;
   type_abonne: string;
   type_abonne_arabe: string | null;
+  num_serie: string;
 }
 
 export interface DossierRecherche {

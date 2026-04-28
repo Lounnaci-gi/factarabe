@@ -43,6 +43,12 @@ export const AbonneCard: React.FC<AbonneCardProps> = ({ abonne }) => {
         <div className="info-block">
           <span className="info-label">Identité Initiale (FR)</span>
           <span className="info-value">{abonne.nom_prenom}</span>
+          <div style={{ marginTop: '12px' }}>
+            <span className="info-label">Matériel</span>
+            <span className="info-value text-muted" style={{ fontSize: '13px' }}>
+              Compteur N° : <strong style={{ color: '#0F172A' }}>{abonne.num_serie}</strong>
+            </span>
+          </div>
         </div>
 
         <div className="info-block" style={{ direction: 'rtl', textAlign: 'right' }}>

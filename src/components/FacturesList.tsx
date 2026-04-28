@@ -36,7 +36,10 @@ export const FacturesList: React.FC<FacturesListProps> = ({ factures }) => {
                 
                 return (
                   <tr key={f.id}>
-                    <td className="text-bold">{f.id}</td>
+                    <td className="text-bold">
+                      {f.periode_label}
+                      <div style={{ fontSize: '12px', color: '#9CA3AF', fontWeight: 'normal' }}>Réf: {f.id}</div>
+                    </td>
                     <td>{f.date_fact}</td>
                     <td className="text-bold" style={{ textAlign: 'right', paddingRight: '32px' }}>
                       {f.montant.toFixed(2)} DZD
