@@ -275,23 +275,31 @@ body {
 }
 
 @media print {
-  body * {
-    visibility: hidden; /* Masque tout le reste lors de l'impression */
+  /* Masquer les éléments de l'interface à l'intérieur du conteneur App */
+  .app-container > :not(.print-container) {
+    display: none !important;
   }
-  .print-container, .print-container * {
-    visibility: visible; /* Affiche uniquement la zone d'impression */
+
+  /* Supprimer les marges et paddings du conteneur pour l'impression */
+  .app-container {
+    margin: 0 !important;
+    padding: 0 !important;
+    display: block !important;
   }
+
   .print-container {
+    display: block !important;
     position: absolute;
     left: 0;
     top: 0;
     width: 21cm;
-    height: 29.7cm; /* Format A4 */
+    height: 29.7cm;
     background: white;
+    overflow: hidden;
   }
   
-  /* Supprimer les marges par défaut du navigateur */
   @page {
+    size: A4;
     margin: 0;
   }
 }

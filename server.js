@@ -29,6 +29,7 @@ let tabcodesMap = new Map();
 let facturesMap = new Map();
 let abonmentsMap = new Map();
 let unitesMap = new Map();
+let caissesMap = new Map();
 let isAbonnesLoaded = false;
 
 async function loadAbonnes() {
@@ -138,11 +139,22 @@ async function loadAbonnes() {
       }
     }
 
+    // Chargement de CAISSE.DBF
+    const dbfCaisse = await DBFFile.open('D:\\EPEOR\\CAISSE.DBF', { encoding: 'win1256' });
+    const caisses = await dbfCaisse.readRecords(dbfCaisse.recordCount);
+    for (const caisse of caisses) {
+      const codeCaisse = caisse.CODCAIS ? caisse.CODCAIS.toString().trim() : '';
+      if (codeCaisse) {
+        caissesMap.set(codeCaisse, caisse);
+      }
+    }
+
     isAbonnesLoaded = true;
     console.log(`✅ ABONNE.DBF chargé : ${abonnesMap.size} abonnés trouvés !`);
     console.log(`✅ RUE.DBF chargé : ${ruesMap.size} rues trouvées !`);
     console.log(`✅ TABCODE.DBF chargé : ${tabcodesMap.size} codes trouvés !`);
     console.log(`✅ UNITE.DBF chargé : ${unitesMap.size} unités trouvées !`);
+    console.log(`✅ CAISSE.DBF chargé : ${caissesMap.size} caisses trouvées !`);
     console.log(`✅ FACTURES.DBF chargé : factures pour ${facturesMap.size} abonnés !`);
   } catch (error) {
     console.error("Erreur de chargement des bases:", error);
@@ -195,6 +207,7 @@ app.get('/api/abonne/:numab', async (req, res) => {
     bloc_arabe: t.bloc_arabe || null,
     ndom_arabe: t.ndom_arabe || null,
     type_abonne: typeAbonneStr,
+    raw_type_abonne: rawTypabon,
     type_abonne_arabe: t.type_abonne_arabe || null,
     num_serie: numSerie,
     tournee: abonneRecord.TOURNEE ? abonneRecord.TOURNEE.toString().trim() : "N/A",
@@ -223,6 +236,9 @@ app.get('/api/abonne/:numab', async (req, res) => {
       const code = (abonneRecord.SECTEUR || "").toString().trim();
       return (t.nom_secteur_arabe) || translationsDB[`SECT_${code}`] || null;
     })(),
+    code_caisse: abonneRecord.CODCAIS ? abonneRecord.CODCAIS.toString().trim() : "N/A",
+    nom_caisse: abonneRecord.CODCAIS ? (caissesMap.get(abonneRecord.CODCAIS.toString().trim())?.LIBCAIS || "Caisse inconnue") : "N/A",
+    nom_caisse_arabe: t.nom_caisse_arabe || translationsDB[`CAISSE_${abonneRecord.CODCAIS?.toString().trim()}`] || null,
   };
 
   const factures = facturesMap.get(numab) || [];
@@ -261,6 +277,14 @@ app.post('/api/abonne/:numab/traduction', (req, res) => {
     const abonne = abonnesMap.get(numab);
     const sCode = (abonne?.SECTEUR || "").toString().trim();
     if (sCode) translationsDB[`SECT_${sCode}`] = req.body.nom_secteur_arabe;
+  }
+
+  if (req.body.nom_caisse_arabe !== undefined) {
+    translationsDB[numab].nom_caisse_arabe = req.body.nom_caisse_arabe;
+    // Sauvegarde globale pour la caisse
+    const abonne = abonnesMap.get(numab);
+    const cCode = abonne?.CODCAIS?.toString().trim();
+    if (cCode) translationsDB[`CAISSE_${cCode}`] = req.body.nom_caisse_arabe;
   }
 
   saveTranslations();

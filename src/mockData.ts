@@ -60,7 +60,7 @@ export const mockDatabase: Record<string, DossierRecherche> = {
 
 export const performSeek = async (numab: string): Promise<DossierRecherche | null> => {
   try {
-    const res = await fetch(`http://localhost:3001/api/abonne/${numab}`);
+    const res = await fetch(`http://${window.location.hostname}:3001/api/abonne/${numab}`);
     if (!res.ok) {
       return null;
     }

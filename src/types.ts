@@ -19,6 +19,7 @@ export interface Abonne {
   bloc_arabe: string | null;
   ndom_arabe: string | null;
   type_abonne: string;
+  raw_type_abonne: string;
   type_abonne_arabe: string | null;
   num_serie: string;
   tournee: string;
@@ -26,8 +27,11 @@ export interface Abonne {
   nom_unite: string;
   code_secteur: string;
   nom_secteur: string;
+  code_caisse: string;
+  nom_caisse: string;
   nom_unite_arabe: string | null;
   nom_secteur_arabe: string | null;
+  nom_caisse_arabe: string | null;
 }
 
 export interface DossierRecherche {
