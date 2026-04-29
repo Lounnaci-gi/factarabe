@@ -4,9 +4,12 @@ import type { DossierRecherche } from './types';
 import { SearchBar } from './components/SearchBar';
 import { AbonneCard } from './components/AbonneCard';
 import { FacturesList } from './components/FacturesList';
+import { InvoicePrint } from './components/InvoicePrint';
+import type { Facture } from './types';
 
 export default function App() {
   const [data, setData] = useState<DossierRecherche | null>(null);
+  const [selectedFacture, setSelectedFacture] = useState<Facture | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,8 +57,19 @@ export default function App() {
       {!isLoading && data && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', marginTop: '20px', animation: 'fadeIn 0.3s ease-in-out' }}>
           <AbonneCard abonne={data.abonne} />
-          <FacturesList factures={data.factures} />
+          <FacturesList 
+            factures={data.factures} 
+            onPrint={(f) => {
+              setSelectedFacture(f);
+              setTimeout(() => window.print(), 100);
+            }} 
+          />
         </div>
+      )}
+
+      {/* Composant d'impression (masqué à l'écran) */}
+      {data && selectedFacture && (
+        <InvoicePrint abonne={data.abonne} facture={selectedFacture} />
       )}
 
       {/* Mini animation CSS intégrée pour la démo */}

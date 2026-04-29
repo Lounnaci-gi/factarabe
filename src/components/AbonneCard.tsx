@@ -11,6 +11,8 @@ export const AbonneCard: React.FC<AbonneCardProps> = ({ abonne }) => {
   const [blocArabe, setBlocArabe] = useState(abonne.bloc_arabe || '');
   const [ndomArabe, setNdomArabe] = useState(abonne.ndom_arabe || '');
   const [typeAbonneArabe, setTypeAbonneArabe] = useState(abonne.type_abonne_arabe || '');
+  const [nomUniteArabe, setNomUniteArabe] = useState(abonne.nom_unite_arabe || '');
+  const [nomSecteurArabe, setNomSecteurArabe] = useState(abonne.nom_secteur_arabe || '');
   const [isSaved, setIsSaved] = useState(false);
 
   useEffect(() => {
@@ -19,6 +21,8 @@ export const AbonneCard: React.FC<AbonneCardProps> = ({ abonne }) => {
     setBlocArabe(abonne.bloc_arabe || '');
     setNdomArabe(abonne.ndom_arabe || '');
     setTypeAbonneArabe(abonne.type_abonne_arabe || '');
+    setNomUniteArabe(abonne.nom_unite_arabe || '');
+    setNomSecteurArabe(abonne.nom_secteur_arabe || '');
   }, [abonne]);
 
   const handleSaveArabe = async (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -33,6 +37,8 @@ export const AbonneCard: React.FC<AbonneCardProps> = ({ abonne }) => {
             bloc_arabe: blocArabe || null,
             ndom_arabe: ndomArabe || null,
             type_abonne_arabe: typeAbonneArabe || null,
+            nom_unite_arabe: nomUniteArabe || null,
+            nom_secteur_arabe: nomSecteurArabe || null,
           }),
         });
         setIsSaved(true);
@@ -64,6 +70,13 @@ export const AbonneCard: React.FC<AbonneCardProps> = ({ abonne }) => {
               &nbsp;&nbsp;|&nbsp;&nbsp;
               Tournée : <strong style={{ color: '#0F172A' }}>{abonne.tournee}</strong>
             </span>
+            <div style={{ marginTop: '8px' }}>
+              <span className="info-value text-muted" style={{ fontSize: '13px' }}>
+                Unité : <strong style={{ color: '#0F172A' }}>{abonne.code_unite} - {abonne.nom_unite}</strong>
+                &nbsp;&nbsp;|&nbsp;&nbsp;
+                Secteur : <strong style={{ color: '#0F172A' }}>{abonne.code_secteur} - {abonne.nom_secteur}</strong>
+              </span>
+            </div>
           </div>
         </div>
 
@@ -88,6 +101,26 @@ export const AbonneCard: React.FC<AbonneCardProps> = ({ abonne }) => {
               onChange={(e) => setTypeAbonneArabe(e.target.value)}
               onKeyDown={handleSaveArabe}
             />
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <input
+                type="text"
+                className="rtl-input"
+                style={{ flex: 1 }}
+                placeholder="اسم الوحدة (Unité en Arabe)"
+                value={nomUniteArabe}
+                onChange={(e) => setNomUniteArabe(e.target.value)}
+                onKeyDown={handleSaveArabe}
+              />
+              <input
+                type="text"
+                className="rtl-input"
+                style={{ flex: 1 }}
+                placeholder="اسم القطاع (Secteur en Arabe)"
+                value={nomSecteurArabe}
+                onChange={(e) => setNomSecteurArabe(e.target.value)}
+                onKeyDown={handleSaveArabe}
+              />
+            </div>
             {isSaved && <span style={{ color: '#10B981', fontSize: '12px' }}>✔ Sauvegardé</span>}
           </div>
         </div>

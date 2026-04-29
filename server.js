@@ -28,6 +28,7 @@ let ruesMap = new Map();
 let tabcodesMap = new Map();
 let facturesMap = new Map();
 let abonmentsMap = new Map();
+let unitesMap = new Map();
 let isAbonnesLoaded = false;
 
 async function loadAbonnes() {
@@ -35,7 +36,7 @@ async function loadAbonnes() {
     console.log("Chargement de ABONNE.DBF en mémoire...");
     const dbf = await DBFFile.open('D:\\EPEOR\\ABONNE.DBF', { encoding: 'win1256' }); // Encodage Arabe Windows
     const records = await dbf.readRecords(dbf.recordCount);
-    
+
     for (const record of records) {
       // NUMAB est la clé
       const numab = record.NUMAB ? record.NUMAB.toString().trim().toUpperCase() : '';
@@ -43,7 +44,7 @@ async function loadAbonnes() {
         abonnesMap.set(numab, record);
       }
     }
-    
+
     // Chargement de RUE.DBF
     const dbfRue = await DBFFile.open('D:\\EPEOR\\RUE.DBF', { encoding: 'win1256' });
     const rues = await dbfRue.readRecords(dbfRue.recordCount);
@@ -53,7 +54,7 @@ async function loadAbonnes() {
         ruesMap.set(codrue, rue);
       }
     }
-    
+
     // Chargement de TABCODE.DBF pour les libellés
     const dbfTabcode = await DBFFile.open('D:\\EPEOR\\TABCODE.DBF', { encoding: 'win1256' });
     const tabcodes = await dbfTabcode.readRecords(dbfTabcode.recordCount);
@@ -80,18 +81,18 @@ async function loadAbonnes() {
       const n = r.NUMAB ? r.NUMAB.toString().trim().toUpperCase() : '';
       if (n) {
         if (!facturesMap.has(n)) facturesMap.set(n, []);
-        
+
         let dFactRaw = r.DATFACT ? r.DATFACT.toString().trim() : '';
         let dFact = '';
         let periodeLabel = r.NUMREC ? r.NUMREC.toString().trim() : Math.random().toString(36).substr(2, 9);
-        
+
         if (dFactRaw.length === 8) {
-          dFact = `${dFactRaw.slice(0,4)}-${dFactRaw.slice(4,6)}-${dFactRaw.slice(6,8)}`;
-          
-          const year = dFactRaw.slice(0,4);
-          const month = dFactRaw.slice(4,6);
+          dFact = `${dFactRaw.slice(0, 4)}-${dFactRaw.slice(4, 6)}-${dFactRaw.slice(6, 8)}`;
+
+          const year = dFactRaw.slice(0, 4);
+          const month = dFactRaw.slice(4, 6);
           const periode = r.PERIODE ? r.PERIODE.toString().trim() : '';
-          
+
           if (periode === '1') {
             const monthNames = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
             const monthIndex = parseInt(month, 10) - 1;
@@ -107,13 +108,13 @@ async function loadAbonnes() {
             periodeLabel = `${trim} ${year}`;
           }
         }
-        
+
         let dReg = r.DATREG ? r.DATREG.toString().trim() : '';
-        if (dReg.length === 8) dReg = `${dReg.slice(0,4)}-${dReg.slice(4,6)}-${dReg.slice(6,8)}`;
-        
+        if (dReg.length === 8) dReg = `${dReg.slice(0, 4)}-${dReg.slice(4, 6)}-${dReg.slice(6, 8)}`;
+
         let rawEtatCpt = r.ETATCPT ? r.ETATCPT.toString().trim() : '';
         let etatCptStr = rawEtatCpt ? (tabcodesMap.get("E" + rawEtatCpt) || `État ${rawEtatCpt}`) : "N/A";
-        
+
         facturesMap.get(n).push({
           id: r.NUMREC ? r.NUMREC.toString().trim() : Math.random().toString(36).substr(2, 9),
           numab: n,
@@ -127,10 +128,21 @@ async function loadAbonnes() {
       }
     }
 
+    // Chargement de UNITE.DBF pour les noms d'unités
+    const dbfUnite = await DBFFile.open('D:\\EPEOR\\UNITE.DBF', { encoding: 'win1256' });
+    const unites = await dbfUnite.readRecords(dbfUnite.recordCount);
+    for (const unite of unites) {
+      const codeUnite = unite.UNITE ? unite.UNITE.toString().trim().replace(/^0+/, '') : '';
+      if (codeUnite) {
+        unitesMap.set(codeUnite, unite);
+      }
+    }
+
     isAbonnesLoaded = true;
     console.log(`✅ ABONNE.DBF chargé : ${abonnesMap.size} abonnés trouvés !`);
     console.log(`✅ RUE.DBF chargé : ${ruesMap.size} rues trouvées !`);
     console.log(`✅ TABCODE.DBF chargé : ${tabcodesMap.size} codes trouvés !`);
+    console.log(`✅ UNITE.DBF chargé : ${unitesMap.size} unités trouvées !`);
     console.log(`✅ FACTURES.DBF chargé : factures pour ${facturesMap.size} abonnés !`);
   } catch (error) {
     console.error("Erreur de chargement des bases:", error);
@@ -160,7 +172,7 @@ app.get('/api/abonne/:numab', async (req, res) => {
   let adresseStr = typeof nomRue === 'string' ? nomRue.trim() : '?';
   const bloc = abonneRecord.BLOC ? abonneRecord.BLOC.toString().trim() : '';
   const ndom = abonneRecord.NDOM ? abonneRecord.NDOM.toString().trim() : '';
-  
+
   if (bloc) adresseStr += ` | BLOC: ${bloc}`;
   if (ndom) adresseStr += ` | DOM: ${ndom}`;
 
@@ -185,7 +197,32 @@ app.get('/api/abonne/:numab', async (req, res) => {
     type_abonne: typeAbonneStr,
     type_abonne_arabe: t.type_abonne_arabe || null,
     num_serie: numSerie,
-    tournee: abonneRecord.TOURNEE ? abonneRecord.TOURNEE.toString().trim() : "N/A"
+    tournee: abonneRecord.TOURNEE ? abonneRecord.TOURNEE.toString().trim() : "N/A",
+    code_unite: (() => {
+      const val = abonneRecord.UNITE || abonneRecord.CODUNI || abonneRecord.COD_UNI || "";
+      return val.toString().trim() || "N/A";
+    })(),
+    nom_unite: (() => {
+      const rawCode = (abonneRecord.UNITE || abonneRecord.CODUNI || abonneRecord.COD_UNI || "").toString().trim();
+      const uCode = rawCode.replace(/^0+/, '');
+      if (!uCode) return "N/A";
+      const unitRec = unitesMap.get(uCode);
+      return unitRec ? (unitRec.DENOM ? unitRec.DENOM.toString().trim() : "Nom manquant") : `Unité ${uCode} non trouvée`;
+    })(),
+    code_secteur: abonneRecord.SECTEUR ? abonneRecord.SECTEUR.toString().trim() : "N/A",
+    nom_secteur: (() => {
+      const sCode = abonneRecord.SECTEUR ? abonneRecord.SECTEUR.toString().trim() : null;
+      return sCode ? (tabcodesMap.get("S" + sCode) || `Secteur ${sCode}`) : "N/A";
+    })(),
+    nom_unite_arabe: (() => {
+      const rawCode = (abonneRecord.UNITE || abonneRecord.CODUNI || "").toString().trim();
+      const code = rawCode.replace(/^0+/, '');
+      return (t.nom_unite_arabe) || translationsDB[`UNIT_${code}`] || null;
+    })(),
+    nom_secteur_arabe: (() => {
+      const code = (abonneRecord.SECTEUR || "").toString().trim();
+      return (t.nom_secteur_arabe) || translationsDB[`SECT_${code}`] || null;
+    })(),
   };
 
   const factures = facturesMap.get(numab) || [];
@@ -208,6 +245,23 @@ app.post('/api/abonne/:numab/traduction', (req, res) => {
   if (bloc_arabe !== undefined) translationsDB[numab].bloc_arabe = bloc_arabe;
   if (ndom_arabe !== undefined) translationsDB[numab].ndom_arabe = ndom_arabe;
   if (type_abonne_arabe !== undefined) translationsDB[numab].type_abonne_arabe = type_abonne_arabe;
+  
+  if (req.body.nom_unite_arabe !== undefined) {
+    translationsDB[numab].nom_unite_arabe = req.body.nom_unite_arabe;
+    // Sauvegarde globale pour l'unité
+    const abonne = abonnesMap.get(numab);
+    const rawCode = (abonne?.UNITE || abonne?.CODUNI || "").toString().trim();
+    const uCode = rawCode.replace(/^0+/, '');
+    if (uCode) translationsDB[`UNIT_${uCode}`] = req.body.nom_unite_arabe;
+  }
+  
+  if (req.body.nom_secteur_arabe !== undefined) {
+    translationsDB[numab].nom_secteur_arabe = req.body.nom_secteur_arabe;
+    // Sauvegarde globale pour le secteur
+    const abonne = abonnesMap.get(numab);
+    const sCode = (abonne?.SECTEUR || "").toString().trim();
+    if (sCode) translationsDB[`SECT_${sCode}`] = req.body.nom_secteur_arabe;
+  }
 
   saveTranslations();
   console.log(`✅ Traductions sauvegardées pour ${numab}:`, translationsDB[numab]);

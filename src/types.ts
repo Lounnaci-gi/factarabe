@@ -22,6 +22,12 @@ export interface Abonne {
   type_abonne_arabe: string | null;
   num_serie: string;
   tournee: string;
+  code_unite: string;
+  nom_unite: string;
+  code_secteur: string;
+  nom_secteur: string;
+  nom_unite_arabe: string | null;
+  nom_secteur_arabe: string | null;
 }
 
 export interface DossierRecherche {

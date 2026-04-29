@@ -204,3 +204,94 @@ body {
   align-items: center;
   gap: 8px;
 }
+
+/* --- Pagination Styles --- */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #F3F4F6;
+}
+
+.pagination-btn {
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  background-color: #FFFFFF;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background-color: #F9FAFB;
+  border-color: #9CA3AF;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-info {
+  font-size: 14px;
+  color: #6B7280;
+}
+
+/* --- Action Buttons --- */
+.btn-icon {
+  background: none;
+  border: 1px solid #E5E7EB;
+  border-radius: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-icon:hover {
+  background-color: #F3F4F6;
+  border-color: #D1D5DB;
+  transform: scale(1.05);
+}
+
+.btn-icon:active {
+  transform: scale(0.95);
+}
+
+/* --- Styles d'Impression --- */
+@media screen {
+  .print-container {
+    display: none; /* Masqué à l'écran */
+  }
+}
+
+@media print {
+  body * {
+    visibility: hidden; /* Masque tout le reste lors de l'impression */
+  }
+  .print-container, .print-container * {
+    visibility: visible; /* Affiche uniquement la zone d'impression */
+  }
+  .print-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 21cm;
+    height: 29.7cm; /* Format A4 */
+    background: white;
+  }
+  
+  /* Supprimer les marges par défaut du navigateur */
+  @page {
+    margin: 0;
+  }
+}

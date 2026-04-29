@@ -1,15 +1,28 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { Facture } from '../types';
 
 interface FacturesListProps {
   factures: Facture[];
+  onPrint: (facture: Facture) => void;
 }
 
-export const FacturesList: React.FC<FacturesListProps> = ({ factures }) => {
+export const FacturesList: React.FC<FacturesListProps> = ({ factures, onPrint }) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 15;
+
+  // Calculs pour la pagination
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = factures.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(factures.length / itemsPerPage);
+
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+
   return (
     <div className="card">
       <div className="card-title">
         <span>Historique des Factures</span>
+        <span className="text-muted" style={{ fontSize: '12px' }}>{factures.length} factures au total</span>
       </div>
       
       <div style={{ overflowX: 'auto' }}>
@@ -21,6 +34,7 @@ export const FacturesList: React.FC<FacturesListProps> = ({ factures }) => {
               <th>Montant</th>
               <th>Statut</th>
               <th>État Cpt</th>
+              <th style={{ textAlign: 'center' }}>Action</th>
             </tr>
           </thead>
           <tbody>
@@ -31,11 +45,11 @@ export const FacturesList: React.FC<FacturesListProps> = ({ factures }) => {
                 </td>
               </tr>
             ) : (
-              factures.map((f) => {
+              currentItems.map((f, index) => {
                 const isPayee = f.montant_paye >= f.montant || f.date_reglement !== null;
                 
                 return (
-                  <tr key={f.id}>
+                  <tr key={`${f.id}-${index}`}>
                     <td className="text-bold">
                       {f.periode_label}
                       <div style={{ fontSize: '12px', color: '#9CA3AF', fontWeight: 'normal' }}>Réf: {f.id}</div>
@@ -60,6 +74,15 @@ export const FacturesList: React.FC<FacturesListProps> = ({ factures }) => {
                         {f.etat_cpt}
                       </span>
                     </td>
+                    <td style={{ textAlign: 'center' }}>
+                      <button 
+                        className="btn-icon" 
+                        title="Imprimer cette facture"
+                        onClick={() => onPrint(f)} 
+                      >
+                        🖨️
+                      </button>
+                    </td>
                   </tr>
                 );
               })
@@ -67,6 +90,31 @@ export const FacturesList: React.FC<FacturesListProps> = ({ factures }) => {
           </tbody>
         </table>
       </div>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="pagination">
+          <button 
+            onClick={() => paginate(currentPage - 1)} 
+            disabled={currentPage === 1}
+            className="pagination-btn"
+          >
+            Précédent
+          </button>
+          
+          <span className="pagination-info">
+            Page {currentPage} sur {totalPages}
+          </span>
+
+          <button 
+            onClick={() => paginate(currentPage + 1)} 
+            disabled={currentPage === totalPages}
+            className="pagination-btn"
+          >
+            Suivant
+          </button>
+        </div>
+      )}
     </div>
   );
 };

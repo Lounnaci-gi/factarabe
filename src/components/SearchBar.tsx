@@ -27,7 +27,10 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
         className="search-input"
         placeholder="Rechercher NUMAB (ex: 001000)..."
         value={value}
-        onChange={(e) => setValue(e.target.value.toUpperCase())}
+        onChange={(e) => {
+          const val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+          setValue(val);
+        }}
         maxLength={6}
         autoFocus
       />
