@@ -226,6 +226,7 @@ app.get('/api/abonne/:numab', async (req, res) => {
     type_abonne_arabe: t.type_abonne_arabe || null,
     num_serie: numSerie,
     tournee: abonneRecord.TOURNEE ? abonneRecord.TOURNEE.toString().trim() : "N/A",
+    echelon: abonneRecord.ECHELON ? abonneRecord.ECHELON.toString().trim() : "N/A",
     code_unite: (() => {
       const val = abonneRecord.UNITE || abonneRecord.CODUNI || abonneRecord.COD_UNI || "";
       return val.toString().trim() || "N/A";

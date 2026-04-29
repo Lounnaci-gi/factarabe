@@ -1,72 +1,25 @@
 import type { DossierRecherche } from './types';
 
-// Simulation de l'accès aux fichiers NTX/SQL
-export const mockDatabase: Record<string, DossierRecherche> = {
-  '001000': {
-    abonne: {
-      numab: '001000',
-      nom_prenom: 'JEAN DUPONT',
-      nom_arabe: 'جان دوبون',
-      adresse: '12 RUE DES ROSES',
-      ville: 'ALGER',
-    },
-    factures: [
-      {
-        id: 'F-2023-01',
-        numab: '001000',
-        montant: 120.50,
-        date_fact: '2023-01-15',
-        date_reglement: '2023-01-20',
-        montant_paye: 120.50,
-      },
-      {
-        id: 'F-2023-02',
-        numab: '001000',
-        montant: 95.00,
-        date_fact: '2023-04-15',
-        date_reglement: '2023-04-18',
-        montant_paye: 95.00,
-      }
-    ]
-  },
-  '001001': {
-    abonne: {
-      numab: '001001',
-      nom_prenom: 'MOHAMED SALAH',
-      nom_arabe: null, // Traduction manquante pour tester la UI
-      adresse: 'CITE 200 LOGTS BT A',
-      ville: 'ORAN',
-    },
-    factures: [
-      {
-        id: 'F-2023-01',
-        numab: '001001',
-        montant: 85.00,
-        date_fact: '2023-01-10',
-        date_reglement: '2023-02-05',
-        montant_paye: 85.00,
-      },
-      {
-        id: 'F-2023-02',
-        numab: '001001',
-        montant: 140.00,
-        date_fact: '2023-04-10',
-        date_reglement: null, // Impayée
-        montant_paye: 0,
-      }
-    ]
-  }
-};
-
+/**
+ * Service de recherche des dossiers abonnés via l'API Backend.
+ * Ce service remplace l'ancienne simulation locale par des appels au serveur Express.
+ */
 export const performSeek = async (numab: string): Promise<DossierRecherche | null> => {
   try {
+    // Utilisation de l'hostname actuel pour supporter l'accès réseau (ex: 192.168.x.x:3001)
     const res = await fetch(`http://${window.location.hostname}:3001/api/abonne/${numab}`);
+    
     if (!res.ok) {
+      if (res.status === 404) {
+        console.warn(`Abonné ${numab} non trouvé.`);
+      }
       return null;
     }
+    
     return await res.json();
   } catch (err) {
-    console.error("Erreur API :", err);
+    console.error("Erreur de connexion à l'API Backend (vérifiez que server.js est lancé) :", err);
     return null;
   }
 };
+

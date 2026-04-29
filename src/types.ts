@@ -31,6 +31,7 @@ export interface Abonne {
   type_abonne_arabe: string | null;
   num_serie: string;
   tournee: string;
+  echelon: string;
   code_unite: string;
   nom_unite: string;
   code_secteur: string;
