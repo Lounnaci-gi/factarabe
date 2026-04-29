@@ -113,6 +113,14 @@ async function loadAbonnes() {
         let dReg = r.DATREG ? r.DATREG.toString().trim() : '';
         if (dReg.length === 8) dReg = `${dReg.slice(0, 4)}-${dReg.slice(4, 6)}-${dReg.slice(6, 8)}`;
 
+        let dRelRaw = r.DATERELEVE ? r.DATERELEVE.toString().trim() : '';
+        let dRel = '';
+        if (dRelRaw.length === 8) dRel = `${dRelRaw.slice(0, 4)}-${dRelRaw.slice(4, 6)}-${dRelRaw.slice(6, 8)}`;
+
+        let dSaisieRaw = r.DATSAISIE ? r.DATSAISIE.toString().trim() : '';
+        let dSaisie = '';
+        if (dSaisieRaw.length === 8) dSaisie = `${dSaisieRaw.slice(0, 4)}-${dSaisieRaw.slice(4, 6)}-${dSaisieRaw.slice(6, 8)}`;
+
         let rawEtatCpt = r.ETATCPT ? r.ETATCPT.toString().trim() : '';
         let etatCptStr = rawEtatCpt ? (tabcodesMap.get("E" + rawEtatCpt) || `État ${rawEtatCpt}`) : "N/A";
 
@@ -122,11 +130,18 @@ async function loadAbonnes() {
           montant: Number(r.MONTTC) || 0,
           date_fact: dFact,
           date_reglement: dReg || null,
+          date_releve: dRel || dFact, // Fallback sur date facturation si relevé vide
+          date_saisie: dSaisie || dFact,
           montant_paye: r.PAIEMENT === 'C' ? (Number(r.MONTTC) || 0) : 0,
           etat_cpt: etatCptStr,
-          periode_label: periodeLabel
+          periode_label: periodeLabel,
+          raw_periode: r.PERIODE ? r.PERIODE.toString().trim() : '',
+          ancien_index: Number(r.ANCIENX) || 0,
+          nouveau_index: Number(r.NOUVELX) || 0,
+          consommation: Number(r.QTE) || 0
         });
       }
+
     }
 
     // Chargement de UNITE.DBF pour les noms d'unités
@@ -242,10 +257,34 @@ app.get('/api/abonne/:numab', async (req, res) => {
   };
 
   const factures = facturesMap.get(numab) || [];
+  
+  // Trier les factures par date pour cet abonné uniquement
+  factures.sort((a, b) => a.date_fact.localeCompare(b.date_fact));
+  
+  // Calculer la date de relevé précédente
+  for (let i = 0; i < factures.length; i++) {
+    if (i > 0) {
+      factures[i].date_releve_prec = factures[i-1].date_releve;
+    } else {
+      // Si première facture et période 3, on recule de 92 jours
+      if (factures[i].raw_periode === '3') {
+        const d = new Date(factures[i].date_releve);
+        d.setDate(d.getDate() - 92);
+        factures[i].date_releve_prec = d.toISOString().split('T')[0];
+      } else {
+        factures[i].date_releve_prec = factures[i].date_releve;
+      }
+    }
+    
+    // Calcul de la date du prochain relevé (+91 jours)
+    const nextRel = new Date(factures[i].date_releve);
+    nextRel.setDate(nextRel.getDate() + 91);
+    factures[i].date_prochain_releve = nextRel.toISOString().split('T')[0];
+  }
 
   res.json({
     abonne,
-    factures
+    factures: factures // De la plus ancienne à la plus récente
   });
 });
 

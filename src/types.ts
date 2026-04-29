@@ -4,9 +4,17 @@ export interface Facture {
   montant: number;
   date_fact: string;
   date_reglement: string | null;
+  date_releve: string;
+  date_releve_prec: string;
+  date_prochain_releve: string;
+  date_saisie: string;
   montant_paye: number;
   etat_cpt: string;
   periode_label: string;
+  raw_periode: string;
+  ancien_index: number;
+  nouveau_index: number;
+  consommation: number;
 }
 
 export interface Abonne {

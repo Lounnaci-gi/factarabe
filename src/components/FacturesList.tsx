@@ -8,21 +8,51 @@ interface FacturesListProps {
 
 export const FacturesList: React.FC<FacturesListProps> = ({ factures, onPrint }) => {
   const [currentPage, setCurrentPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'payee' | 'impayee'>('all');
   const itemsPerPage = 15;
+
+  // Filtrage des factures
+  const filteredFactures = factures.filter(f => {
+    const isPayee = f.montant_paye >= f.montant || f.date_reglement !== null;
+    if (statusFilter === 'payee') return isPayee;
+    if (statusFilter === 'impayee') return !isPayee;
+    return true;
+  });
 
   // Calculs pour la pagination
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = factures.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(factures.length / itemsPerPage);
+  const currentItems = filteredFactures.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredFactures.length / itemsPerPage);
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
   return (
     <div className="card">
-      <div className="card-title">
-        <span>Historique des Factures</span>
-        <span className="text-muted" style={{ fontSize: '12px' }}>{factures.length} factures au total</span>
+      <div className="card-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <span>Historique des Factures</span>
+          <span className="text-muted" style={{ fontSize: '12px', marginLeft: '12px' }}>
+            {filteredFactures.length} affichées sur {factures.length}
+          </span>
+        </div>
+        
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <label style={{ fontSize: '12px', color: '#6B7280' }}>Filtrer par :</label>
+          <select 
+            className="rtl-input" 
+            style={{ padding: '4px 8px', fontSize: '13px', width: 'auto' }}
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value as any);
+              setCurrentPage(1); // Reset pagination
+            }}
+          >
+            <option value="all">Toutes les factures</option>
+            <option value="payee">Factures Payées</option>
+            <option value="impayee">Factures Impayées</option>
+          </select>
+        </div>
       </div>
       
       <div style={{ overflowX: 'auto' }}>
@@ -31,6 +61,9 @@ export const FacturesList: React.FC<FacturesListProps> = ({ factures, onPrint })
             <tr>
               <th>Période / Réf</th>
               <th>Date Facturation</th>
+              <th>Ancien</th>
+              <th>Nouveau</th>
+              <th>Conso</th>
               <th>Montant</th>
               <th>Statut</th>
               <th>État Cpt</th>
@@ -38,7 +71,7 @@ export const FacturesList: React.FC<FacturesListProps> = ({ factures, onPrint })
             </tr>
           </thead>
           <tbody>
-            {factures.length === 0 ? (
+            {filteredFactures.length === 0 ? (
               <tr>
                 <td colSpan={5} style={{ textAlign: 'center', color: '#9CA3AF' }}>
                   Aucune facture trouvée.
@@ -55,6 +88,9 @@ export const FacturesList: React.FC<FacturesListProps> = ({ factures, onPrint })
                       <div style={{ fontSize: '12px', color: '#9CA3AF', fontWeight: 'normal' }}>Réf: {f.id}</div>
                     </td>
                     <td>{f.date_fact}</td>
+                    <td>{f.ancien_index}</td>
+                    <td>{f.nouveau_index}</td>
+                    <td className="text-bold" style={{ color: '#2563EB' }}>{f.consommation} m³</td>
                     <td className="text-bold" style={{ textAlign: 'right', paddingRight: '32px' }}>
                       {f.montant.toFixed(2)} DZD
                     </td>
