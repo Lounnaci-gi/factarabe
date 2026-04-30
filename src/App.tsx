@@ -56,7 +56,7 @@ export default function App() {
       {/* Affichage du Dossier si trouvé */}
       {!isLoading && data && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', marginTop: '20px', animation: 'fadeIn 0.3s ease-in-out' }}>
-          <AbonneCard abonne={data.abonne} />
+          <AbonneCard key={data.abonne.numab} abonne={data.abonne} />
           <FacturesList 
             factures={data.factures} 
             onPrint={(f) => {

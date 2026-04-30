@@ -281,6 +281,11 @@ app.get('/api/abonne/:numab', async (req, res) => {
     const nextRel = new Date(factures[i].date_releve);
     nextRel.setDate(nextRel.getDate() + 91);
     factures[i].date_prochain_releve = nextRel.toISOString().split('T')[0];
+
+    // Calcul de la date de la prochaine facture (+91 jours de la date de saisie)
+    const nextFact = new Date(factures[i].date_saisie);
+    nextFact.setDate(nextFact.getDate() + 91);
+    factures[i].date_prochaine_facture = nextFact.toISOString().split('T')[0];
   }
 
   res.json({

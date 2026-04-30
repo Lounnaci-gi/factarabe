@@ -8,6 +8,7 @@ export interface Facture {
   date_releve_prec: string;
   date_prochain_releve: string;
   date_saisie: string;
+  date_prochaine_facture: string;
   montant_paye: number;
   etat_cpt: string;
   periode_label: string;

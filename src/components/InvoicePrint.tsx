@@ -13,8 +13,8 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture }) =
       <div
         style={{
           position: 'absolute',
-          left: '14.5cm',
-          top: '3.4cm',
+          left: '11.5cm',
+          top: '3.2cm',
           width: '5cm',
           textAlign: 'right',
           direction: 'rtl',
@@ -30,8 +30,8 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture }) =
       <div
         style={{
           position: 'absolute',
-          left: '14.5cm',
-          top: '4.2cm',
+          left: '11.5cm',
+          top: '4cm',
           width: '5cm',
           textAlign: 'right',
           direction: 'rtl',
@@ -47,8 +47,8 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture }) =
       <div
         style={{
           position: 'absolute',
-          left: '14.5cm',
-          top: '5.0cm',
+          left: '11.5cm',
+          top: '4.8cm',
           width: '5cm',
           textAlign: 'right',
           direction: 'rtl',
@@ -63,29 +63,30 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture }) =
       {/* --- BLOC CENTRAL : Facture et Période --- */}
 
       {/* Valeur : Numéro de facture formaté (NUMAB / yyyy-mm) */}
-      <div 
-        style={{ 
-          position: 'absolute', 
-          left: '7.2cm', 
-          top: '3.4cm',
+      <div
+        style={{
+          position: 'absolute',
+          left: '7.2cm',
+          top: '3.2cm',
           width: '4cm',
-          textAlign: 'center',
+          textAlign: 'right',
           fontFamily: 'inherit',
           fontSize: '12px',
-          fontWeight: 'bold'
+          fontWeight: 'bold',
+          direction: 'rtl'
         }}
       >
         {abonne.numab} / {facture.date_fact.slice(0, 7)}
       </div>
 
-      {/* Valeur : Période (من ... إلى ...) */}
+      {/* Valeur : Période (من ... إلى ...) restaurée */}
       <div
         style={{
           position: 'absolute',
           left: '7.2cm',
-          top: '4.2cm',
-          width: '5cm', // Augmenté pour éviter le wrap
-          textAlign: 'center',
+          top: '4cm',
+          width: '5cm',
+          textAlign: 'left',
           direction: 'rtl',
           whiteSpace: 'nowrap',
           fontFamily: 'inherit',
@@ -94,6 +95,7 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture }) =
         }}
       >
         من {facture.date_releve_prec.split('-').reverse().join('/')} إلى {facture.date_releve.split('-').reverse().join('/')}
+
       </div>
 
       {/* Valeur : Date de saisie (dd/mm/yyyy) */}
@@ -101,12 +103,13 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture }) =
         style={{
           position: 'absolute',
           left: '7.2cm',
-          top: '5.0cm',
+          top: '4.8cm',
           width: '4cm',
-          textAlign: 'center',
+          textAlign: 'right',
           fontFamily: 'inherit',
-          fontSize: '12px',
-          fontWeight: 'bold'
+          fontSize: '11px',
+          fontWeight: 'bold',
+          direction: 'rtl'
         }}
       >
         {facture.date_saisie.split('-').reverse().join('/')}
@@ -115,13 +118,13 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture }) =
       {/* --- BLOC GAUCHE : Dates Relevés --- */}
 
       {/* Valeur : Date de relevé (dd/mm/yyyy) */}
-      <div 
-        style={{ 
-          position: 'absolute', 
-          left: '1.5cm', 
-          top: '3.4cm',
+      <div
+        style={{
+          position: 'absolute',
+          left: '1.5cm',
+          top: '3.2cm',
           fontFamily: 'inherit',
-          fontSize: '12px',
+          fontSize: '11px',
           fontWeight: 'bold'
         }}
       >
@@ -133,13 +136,27 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture }) =
         style={{
           position: 'absolute',
           left: '1.5cm',
-          top: '4.2cm',
+          top: '4cm',
           fontFamily: 'inherit',
-          fontSize: '12px',
+          fontSize: '11px',
           fontWeight: 'bold'
         }}
       >
         {facture.date_prochain_releve.split('-').reverse().join('/')}
+      </div>
+
+      {/* Valeur : Date de la prochaine facture (dd/mm/yyyy) */}
+      <div
+        style={{
+          position: 'absolute',
+          left: '1.5cm',
+          top: '4.8cm',
+          fontFamily: 'inherit',
+          fontSize: '11px',
+          fontWeight: 'bold'
+        }}
+      >
+        {facture.date_prochaine_facture.split('-').reverse().join('/')}
       </div>
 
 
@@ -163,8 +180,8 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture }) =
       <div
         style={{
           position: 'absolute',
-          left: '10.5cm',
-          top: '7.2cm',
+          left: '7cm',
+          top: '5.6cm',
           width: '8.5cm',
           textAlign: 'right',
           fontFamily: 'inherit',
@@ -179,8 +196,8 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture }) =
       <div
         style={{
           position: 'absolute',
-          left: '10.5cm',
-          top: '8.0cm',
+          left: '7cm',
+          top: '6.6cm',
           width: '8.5cm',
           textAlign: 'right',
           direction: 'rtl',
@@ -195,8 +212,8 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture }) =
       <div
         style={{
           position: 'absolute',
-          left: '10.5cm',
-          top: '8.8cm',
+          left: '7cm',
+          top: '6.6cm',
           width: '8.5cm',
           textAlign: 'right',
           direction: 'rtl',
@@ -211,8 +228,8 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture }) =
       <div
         style={{
           position: 'absolute',
-          left: '10.5cm',
-          top: '9.6cm',
+          left: '7cm',
+          top: '7.6cm',
           width: '8.5cm',
           textAlign: 'right',
           direction: 'rtl',

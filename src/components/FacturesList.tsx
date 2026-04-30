@@ -44,7 +44,7 @@ export const FacturesList: React.FC<FacturesListProps> = ({ factures, onPrint })
             style={{ padding: '4px 8px', fontSize: '13px', width: 'auto' }}
             value={statusFilter}
             onChange={(e) => {
-              setStatusFilter(e.target.value as any);
+              setStatusFilter(e.target.value as 'all' | 'payee' | 'impayee');
               setCurrentPage(1); // Reset pagination
             }}
           >

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import type { Abonne } from '../types';
 
 interface AbonneCardProps {
@@ -15,17 +15,6 @@ export const AbonneCard: React.FC<AbonneCardProps> = ({ abonne }) => {
   const [nomSecteurArabe, setNomSecteurArabe] = useState(abonne.nom_secteur_arabe || '');
   const [nomCaisseArabe, setNomCaisseArabe] = useState(abonne.nom_caisse_arabe || '');
   const [isSaved, setIsSaved] = useState(false);
-
-  useEffect(() => {
-    setNomArabe(abonne.nom_arabe || '');
-    setRueArabe(abonne.rue_arabe || '');
-    setBlocArabe(abonne.bloc_arabe || '');
-    setNdomArabe(abonne.ndom_arabe || '');
-    setTypeAbonneArabe(abonne.type_abonne_arabe || '');
-    setNomUniteArabe(abonne.nom_unite_arabe || '');
-    setNomSecteurArabe(abonne.nom_secteur_arabe || '');
-    setNomCaisseArabe(abonne.nom_caisse_arabe || '');
-  }, [abonne]);
 
   const handleSaveArabe = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
