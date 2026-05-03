@@ -1,11 +1,12 @@
 import React from 'react';
 import type { Abonne, Facture } from '../types';
+import { AbonneCard } from './AbonneCard';
 
 const getEtatCptLabel = (etat: string | number | undefined | null) => {
   if (!etat) return etat;
 
   const str = String(etat).toUpperCase();
-  
+
   if (str.includes('EN MARCHE')) return 'في الخدمة'; // 10
   if (str.includes("PAS D'EAU") || str.includes("PAS D EAU")) return 'بدون ماء'; // 11
   if (str.includes('LIGNE INUTILISEE') || str.includes('LIGNE INUTILISÉE')) return 'خط غير مستخدم'; // 12, 19
@@ -39,7 +40,7 @@ const getEtatCptLabel = (etat: string | number | undefined | null) => {
       case 41: return 'غير موصول';
     }
   }
-  
+
   return etat;
 };
 
@@ -205,17 +206,17 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture }) =
       {/* --- BLOC ABONNÉ (CADRE MILIEU) --- */}
 
       {/* GAUCHE : Compteur */}
-      <div style={{ position: 'absolute', left: '1.5cm', top: '7.2cm', fontFamily: 'inherit', fontSize: '12px', fontWeight: 'bold', direction: 'rtl' }}>
-        {getEtatCptLabel(facture.etat_cpt)}
+      <div style={{ position: 'absolute', right: '13cm', top: '5.8cm', fontFamily: 'inherit', fontSize: '12px', direction: 'rtl' }}>
+        {abonne.num_serie} {getEtatCptLabel(facture.etat_cpt)}
       </div>
-      <div style={{ position: 'absolute', left: '1.5cm', top: '8.0cm', fontFamily: 'inherit', fontSize: '13px', fontWeight: 'bold' }}>
+      <div style={{ position: 'absolute', right: '13cm', top: '6.6cm', fontFamily: 'inherit', fontSize: '12px', direction: 'rtl' }}>
         {facture.ancien_index}
       </div>
-      <div style={{ position: 'absolute', left: '1.5cm', top: '8.8cm', fontFamily: 'inherit', fontSize: '13px', fontWeight: 'bold' }}>
+      <div style={{ position: 'absolute', right: '13cm', top: '7.2cm', fontFamily: 'inherit', fontSize: '12px', direction: 'rtl' }}>
         {facture.nouveau_index}
       </div>
-      <div style={{ position: 'absolute', left: '1.5cm', top: '9.6cm', fontFamily: 'inherit', fontSize: '14px', fontWeight: 'bold' }}>
-        {facture.consommation} m³
+      <div style={{ position: 'absolute', right: '13cm', top: '7.8cm', fontFamily: 'inherit', fontSize: '12px', direction: 'rtl' }}>
+        {facture.consommation} <sup>3</sup>م
       </div>
 
       {/* DROITE : Identification Client */}
