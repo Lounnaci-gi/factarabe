@@ -116,7 +116,7 @@ export const FacturesList: React.FC<FacturesListProps> = ({ factures, onPrint })
                     <td>{f.nouveau_index}</td>
                     <td className="text-bold" style={{ color: '#2563EB' }}>{f.consommation} m³</td>
                     <td className="text-bold" style={{ textAlign: 'right', paddingRight: '32px' }}>
-                      {f.montant.toFixed(2)} DZD
+                      {f.montant.toLocaleString('fr-DZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} DZD
                     </td>
                     <td>
                       {isPayee ? (

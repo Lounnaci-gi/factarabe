@@ -1,6 +1,5 @@
 import React from 'react';
 import type { Abonne, Facture } from '../types';
-import { AbonneCard } from './AbonneCard';
 
 const getEtatCptLabel = (etat: string | number | undefined | null) => {
   if (!etat) return etat;

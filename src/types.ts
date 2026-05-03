@@ -1,3 +1,5 @@
+import { FactureCalc } from './utils/calcFacture';
+
 export interface Facture {
   id: string;
   numab: string;
@@ -16,6 +18,7 @@ export interface Facture {
   ancien_index: number;
   nouveau_index: number;
   consommation: number;
+  calc_data: FactureCalc;
 }
 
 export interface Abonne {

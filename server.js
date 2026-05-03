@@ -79,7 +79,7 @@ async function loadAbonnes() {
     console.log("Chargement de FACTURES.DBF en mémoire (cela prend ~25 secondes)...");
     const dbfFactures = await DBFFile.open('D:\\EPEOR\\FACTURES.DBF', { encoding: 'win1256' });
     for await (const r of dbfFactures) {
-      const n = r.NUMAB ? r.NUMAB.toString().trim().toUpperCase() : '';
+      let n = r.NUMAB ? r.NUMAB.toString().replace(/\x00/g, '').trim().toUpperCase() : '';
       if (n) {
         if (!facturesMap.has(n)) facturesMap.set(n, []);
 
@@ -138,7 +138,29 @@ async function loadAbonnes() {
           raw_periode: r.PERIODE ? r.PERIODE.toString().trim() : '',
           ancien_index: Number(r.ANCIENX) || 0,
           nouveau_index: Number(r.NOUVELX) || 0,
-          consommation: Number(r.QTE) || 0
+          consommation: Number(r.QTE) || 0,
+          calc_data: {
+            type: r.TYPE ? r.TYPE.toString().trim() : '',
+            typabon: Number(r.TYPABON) || 0,
+            qe11: Number(r.QE11) || 0, pe11: Number(r.PE11) || 0,
+            qe12: Number(r.QE12) || 0, pe12: Number(r.PE12) || 0,
+            qe13: Number(r.QE13) || 0, pe13: Number(r.PE13) || 0,
+            qe14: Number(r.QE14) || 0, pe14: Number(r.PE14) || 0,
+            qeun: Number(r.QEUN) || 0, peun: Number(r.PEUN) || 0,
+            pa11: Number(r.PA11) || 0, pa12: Number(r.PA12) || 0,
+            pa13: Number(r.PA13) || 0, pa14: Number(r.PA14) || 0,
+            paun: Number(r.PAUN) || 0,
+            rfa: Number(r.RFA) || 0,
+            tvrfa: Number(r.TVRFA) || 0,
+            rfass: Number(r.RFASS) || 0,
+            tveau: Number(r.TVEAU) || 0,
+            tvass: Number(r.TVASS) || 0,
+            ass: Number(r.ASS) || 0,
+            rqe: Number(r.RQE) || 0,
+            ree: Number(r.REE) || 0,
+            rdg: Number(r.RDG) || 0,
+            qte: Number(r.QTE) || 0,
+          }
         });
       }
 
