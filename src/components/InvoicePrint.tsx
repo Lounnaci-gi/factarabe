@@ -161,7 +161,7 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture }) =
       {/* BLOC ABONNÉ — COLONNE DROITE : Identification Client    */}
       {/* ======================================================= */}
 
-      <div style={{ position: 'absolute', right: '1cm', top: '5.8cm', width: '8cm', textAlign: 'right', direction: 'rtl', fontFamily: 'inherit', fontSize: '12px', fontWeight: 'bold' }}>
+      <div style={{ position: 'absolute', right: '6cm', top: '5.8cm', width: '8cm', textAlign: 'right', direction: 'rtl', fontFamily: 'inherit', fontSize: '12px', fontWeight: 'bold' }}>
         {abonne.code_unite} {abonne.code_secteur} {abonne.echelon} {abonne.numab} (TRN : {abonne.tournee})
       </div>
 
@@ -305,7 +305,7 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture }) =
       {/* CODE-BARRES                                              */}
       {/* ======================================================= */}
 
-      <div style={{ position: 'absolute', left: '1cm', top: '5.6cm', height: '0.6cm', overflow: 'hidden' }}>
+      <div style={{ position: 'absolute', left: '15cm', top: '5.6cm', height: '0.6cm', overflow: 'hidden' }}>
         <img
           src={`https://barcodeapi.org/api/128/${abonne.numab}`}
           alt="Barcode"
