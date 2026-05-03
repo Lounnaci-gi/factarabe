@@ -139,6 +139,7 @@ async function loadAbonnes() {
           ancien_index: Number(r.ANCIENX) || 0,
           nouveau_index: Number(r.NOUVELX) || 0,
           consommation: Number(r.QTE) || 0,
+          timbre: Number(r.TIMBRE) || 0,
           calc_data: {
             type: r.TYPE ? r.TYPE.toString().trim() : '',
             typabon: Number(r.TYPABON) || 0,

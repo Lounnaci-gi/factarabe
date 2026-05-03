@@ -18,6 +18,7 @@ export interface Facture {
   ancien_index: number;
   nouveau_index: number;
   consommation: number;
+  timbre: number;
   calc_data: FactureCalc;
 }
 
