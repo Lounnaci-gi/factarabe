@@ -1,6 +1,30 @@
 import React, { useState } from 'react';
 import type { Facture } from '../types';
 
+const getEtatCptLabel = (etat: string | number | undefined | null) => {
+  if (!etat) return etat;
+  const num = Number(etat);
+  if (isNaN(num)) return etat;
+  
+  switch (num) {
+    case 10: return 'في الخدمة'; // EN MARCHE
+    case 11: return 'بدون ماء'; // PAS D'EAU
+    case 12: return 'خط غير مستخدم'; // LIGNE INUTILISEE
+    case 13: return 'تجاوز المؤشر'; // DEPASSEMENT INDEX
+    case 14: return 'عداد مقطوع'; // COMPTEUR COUPE
+    case 15: return 'بئر'; // PUIT
+    case 16: return 'قطعة أرض'; // LOT DE TERRAIN
+    case 17: return 'خزانة مغلقة'; // NICHE FERMEE
+    case 18: return 'منزل غير مسكون'; // MAISON INHABITEE
+    case 19: return 'خط غير مستخدم'; // LIGNE INUTILISEE
+    case 20: return 'متوقف'; // A l'ARRET
+    case 30: return 'بدون عداد'; // SANS COMPTEUR
+    case 40: return 'ملغى'; // RESILIE
+    case 41: return 'غير موصول'; // NON BRANCHE
+    default: return etat;
+  }
+};
+
 interface FacturesListProps {
   factures: Facture[];
   onPrint: (facture: Facture) => void;
@@ -106,8 +130,8 @@ export const FacturesList: React.FC<FacturesListProps> = ({ factures, onPrint })
                       )}
                     </td>
                     <td>
-                      <span className="badge" style={{ backgroundColor: '#e2e8f0', color: '#475569' }}>
-                        {f.etat_cpt}
+                      <span className="badge" style={{ backgroundColor: '#e2e8f0', color: '#475569', direction: 'rtl', display: 'inline-block' }}>
+                        {getEtatCptLabel(f.etat_cpt)}
                       </span>
                     </td>
                     <td style={{ textAlign: 'center' }}>

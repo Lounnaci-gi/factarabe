@@ -1,6 +1,48 @@
 import React from 'react';
 import type { Abonne, Facture } from '../types';
 
+const getEtatCptLabel = (etat: string | number | undefined | null) => {
+  if (!etat) return etat;
+
+  const str = String(etat).toUpperCase();
+  
+  if (str.includes('EN MARCHE')) return 'في الخدمة'; // 10
+  if (str.includes("PAS D'EAU") || str.includes("PAS D EAU")) return 'بدون ماء'; // 11
+  if (str.includes('LIGNE INUTILISEE') || str.includes('LIGNE INUTILISÉE')) return 'خط غير مستخدم'; // 12, 19
+  if (str.includes('DEPASSEMENT INDEX') || str.includes('DÉPASSEMENT INDEX')) return 'تجاوز المؤشر'; // 13
+  if (str.includes('COMPTEUR COUPE') || str.includes('COMPTEUR COUPÉ')) return 'عداد مقطوع'; // 14
+  if (str.includes('PUIT')) return 'بئر'; // 15
+  if (str.includes('LOT DE TERRAIN')) return 'قطعة أرض'; // 16
+  if (str.includes('NICHE FERMEE') || str.includes('NICHE FERMÉE')) return 'خزانة مغلقة'; // 17
+  if (str.includes('MAISON INHABITEE') || str.includes('MAISON INHABITÉ')) return 'منزل غير مسكون'; // 18
+  if (str.includes("A L'ARRET") || str.includes("A L ARRET") || str.includes("À L'ARRÊT")) return 'متوقف'; // 20
+  if (str.includes('SANS COMPTEUR')) return 'بدون عداد'; // 30
+  if (str.includes('RESILIE') || str.includes('RÉSILIÉ')) return 'ملغى'; // 40
+  if (str.includes('NON BRANCHE') || str.includes('NON BRANCHÉ')) return 'غير موصول'; // 41
+
+  const num = Number(etat);
+  if (!isNaN(num)) {
+    switch (num) {
+      case 10: return 'في الخدمة';
+      case 11: return 'بدون ماء';
+      case 12: return 'خط غير مستخدم';
+      case 13: return 'تجاوز المؤشر';
+      case 14: return 'عداد مقطوع';
+      case 15: return 'بئر';
+      case 16: return 'قطعة أرض';
+      case 17: return 'خزانة مغلقة';
+      case 18: return 'منزل غير مسكون';
+      case 19: return 'خط غير مستخدم';
+      case 20: return 'متوقف';
+      case 30: return 'بدون عداد';
+      case 40: return 'ملغى';
+      case 41: return 'غير موصول';
+    }
+  }
+  
+  return etat;
+};
+
 interface InvoicePrintProps {
   abonne: Abonne;
   facture: Facture;
@@ -13,7 +55,7 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture }) =
       <div
         style={{
           position: 'absolute',
-          left: '11.5cm',
+          left: '12cm',
           top: '3.2cm',
           width: '5cm',
           textAlign: 'right',
@@ -30,7 +72,7 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture }) =
       <div
         style={{
           position: 'absolute',
-          left: '11.5cm',
+          left: '12cm',
           top: '4cm',
           width: '5cm',
           textAlign: 'right',
@@ -47,7 +89,7 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture }) =
       <div
         style={{
           position: 'absolute',
-          left: '11.5cm',
+          left: '12cm',
           top: '4.8cm',
           width: '5cm',
           textAlign: 'right',
@@ -163,8 +205,8 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture }) =
       {/* --- BLOC ABONNÉ (CADRE MILIEU) --- */}
 
       {/* GAUCHE : Compteur */}
-      <div style={{ position: 'absolute', left: '1.5cm', top: '7.2cm', fontFamily: 'inherit', fontSize: '12px', fontWeight: 'bold' }}>
-        {facture.etat_cpt}
+      <div style={{ position: 'absolute', left: '1.5cm', top: '7.2cm', fontFamily: 'inherit', fontSize: '12px', fontWeight: 'bold', direction: 'rtl' }}>
+        {getEtatCptLabel(facture.etat_cpt)}
       </div>
       <div style={{ position: 'absolute', left: '1.5cm', top: '8.0cm', fontFamily: 'inherit', fontSize: '13px', fontWeight: 'bold' }}>
         {facture.ancien_index}
@@ -181,13 +223,12 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture }) =
         style={{
           position: 'absolute',
           left: '7cm',
-          top: '5.6cm',
+          top: '5.8cm',
           width: '8.5cm',
           textAlign: 'right',
           fontFamily: 'inherit',
           fontSize: '12px',
-          fontWeight: 'bold',
-          letterSpacing: '1px'
+          fontWeight: 'bold'
         }}
       >
         {abonne.code_unite} {abonne.code_secteur} {abonne.echelon} {abonne.numab} (TRN :{abonne.tournee})
@@ -196,7 +237,7 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture }) =
       <div
         style={{
           position: 'absolute',
-          left: '7cm',
+          left: '10cm',
           top: '6.6cm',
           width: '8.5cm',
           textAlign: 'right',
@@ -212,8 +253,8 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture }) =
       <div
         style={{
           position: 'absolute',
-          left: '7cm',
-          top: '6.6cm',
+          left: '10cm',
+          top: '7.1cm',
           width: '8.5cm',
           textAlign: 'right',
           direction: 'rtl',
@@ -228,9 +269,9 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture }) =
       <div
         style={{
           position: 'absolute',
-          left: '7cm',
-          top: '7.6cm',
-          width: '8.5cm',
+          left: '10cm',
+          top: '8cm',
+          width: '8.6cm',
           textAlign: 'right',
           direction: 'rtl',
           fontFamily: 'inherit',
@@ -244,11 +285,11 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture }) =
       </div>
 
       {/* Code-barres pour NUMAB - Repositionné en bas à droite pour le paiement électronique */}
-      <div style={{ position: 'absolute', left: '16.2cm', top: '23.8cm', height: '0.8cm', overflow: 'hidden' }}>
+      <div style={{ position: 'absolute', left: '15.5cm', top: '5.6cm', height: '0.6cm', overflow: 'hidden' }}>
         <img
           src={`https://barcodeapi.org/api/128/${abonne.numab}`}
           alt="Barcode"
-          style={{ height: '1.2cm', minWidth: '3.5cm', display: 'block' }}
+          style={{ height: '0.8cm', minWidth: '3.5cm', display: 'block' }}
         />
       </div>
     </div>
