@@ -187,6 +187,28 @@ async function loadAbonnes() {
       }
     }
 
+    // ─── Construction automatique des clés globales TYPABON_XX ───────────────
+    // Scanne les traductions existantes par abonné pour remplir les clés globales
+    // partagées, de sorte que tous les abonnés du même type bénéficient des
+    // traductions déjà saisies sans avoir à les re-saisir.
+    let typabonCount = 0;
+    for (const [key, trans] of Object.entries(translationsDB)) {
+      if (trans && typeof trans === 'object' && trans.type_abonne_arabe) {
+        const abonneRec = abonnesMap.get(key);
+        if (abonneRec) {
+          const rawTyp = abonneRec.TYPABON ? abonneRec.TYPABON.toString().trim() : null;
+          if (rawTyp && !translationsDB[`TYPABON_${rawTyp}`]) {
+            translationsDB[`TYPABON_${rawTyp}`] = trans.type_abonne_arabe;
+            typabonCount++;
+          }
+        }
+      }
+    }
+    if (typabonCount > 0) {
+      console.log(`✅ ${typabonCount} clé(s) globale(s) TYPABON_XX construites depuis les traductions existantes.`);
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     isAbonnesLoaded = true;
     console.log(`✅ ABONNE.DBF chargé : ${abonnesMap.size} abonnés trouvés !`);
     console.log(`✅ RUE.DBF chargé : ${ruesMap.size} rues trouvées !`);
@@ -246,7 +268,7 @@ app.get('/api/abonne/:numab', async (req, res) => {
     ndom_arabe: t.ndom_arabe || null,
     type_abonne: typeAbonneStr,
     raw_type_abonne: rawTypabon,
-    type_abonne_arabe: t.type_abonne_arabe || null,
+    type_abonne_arabe: t.type_abonne_arabe || (rawTypabon ? translationsDB[`TYPABON_${rawTypabon}`] : null) || null,
     num_serie: numSerie,
     tournee: abonneRecord.TOURNEE ? abonneRecord.TOURNEE.toString().trim() : "N/A",
     echelon: abonneRecord.ECHELON ? abonneRecord.ECHELON.toString().trim() : "N/A",
@@ -328,7 +350,13 @@ app.post('/api/abonne/:numab/traduction', (req, res) => {
   if (rue_arabe !== undefined) translationsDB[numab].rue_arabe = rue_arabe;
   if (bloc_arabe !== undefined) translationsDB[numab].bloc_arabe = bloc_arabe;
   if (ndom_arabe !== undefined) translationsDB[numab].ndom_arabe = ndom_arabe;
-  if (type_abonne_arabe !== undefined) translationsDB[numab].type_abonne_arabe = type_abonne_arabe;
+  if (type_abonne_arabe !== undefined) {
+    translationsDB[numab].type_abonne_arabe = type_abonne_arabe;
+    // Sauvegarde globale pour le type d'abonné (partagé entre tous les abonnés du même type)
+    const abonneRec = abonnesMap.get(numab);
+    const rawTyp = abonneRec?.TYPABON ? abonneRec.TYPABON.toString().trim() : null;
+    if (rawTyp && type_abonne_arabe) translationsDB[`TYPABON_${rawTyp}`] = type_abonne_arabe;
+  }
   
   if (req.body.nom_unite_arabe !== undefined) {
     translationsDB[numab].nom_unite_arabe = req.body.nom_unite_arabe;
@@ -360,6 +388,16 @@ app.post('/api/abonne/:numab/traduction', (req, res) => {
   res.json({ success: true, numab, traduction: translationsDB[numab] });
 });
 
-app.listen(3001, () => {
+const server = app.listen(3001, () => {
   console.log('🚀 Serveur Backend API démarré sur http://localhost:3001');
+});
+
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error('❌ ERREUR : Le port 3001 est déjà utilisé par un autre processus.');
+    console.error('   → Fermez l\'autre instance du serveur et relancez : npm start server');
+  } else {
+    console.error('❌ Erreur serveur :', err.message);
+  }
+  process.exit(1);
 });
