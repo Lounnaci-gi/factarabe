@@ -183,40 +183,31 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture }) =
       {/* BLOC TRANCHES EAU (TYPE='E' groupe A uniquement)        */}
       {/* ======================================================= */}
 
+
       {fc.type === 'E' && fc.typabon >= 10 && fc.typabon <= 19 && fc.typabon !== 15 && (
         <>
-          {fc.qe11 > 0 && (
-            <>
-              <div style={{ position: 'absolute', right: '10cm', top: '10cm', fontFamily: 'inherit', fontSize: '11px' }}>{fc.qe11}</div>
-              <div style={{ position: 'absolute', right: '14cm', top: '10cm', fontFamily: 'inherit', fontSize: '11px' }}>{formatDZD(fc.pe11)}</div>
-              <div style={{ position: 'absolute', right: '17cm', top: '10cm', fontFamily: 'inherit', fontSize: '11px' }}>{formatDZD(fc.qe11 * fc.pe11)}</div>
-              <div style={{ position: 'absolute', right: '10cm', top: '14cm', fontFamily: 'inherit', fontSize: '11px' }}>{fc.qe11}</div>
-            </>
-          )}
-          {fc.qe12 > 0 && (
-            <>
-              <div style={{ position: 'absolute', right: '10cm', top: '10.5cm', fontFamily: 'inherit', fontSize: '11px' }}>{fc.qe12}</div>
-              <div style={{ position: 'absolute', right: '14cm', top: '10.5cm', fontFamily: 'inherit', fontSize: '11px' }}>{formatDZD(fc.pe12)}</div>
-              <div style={{ position: 'absolute', right: '17cm', top: '10.5cm', fontFamily: 'inherit', fontSize: '11px' }}>{formatDZD(fc.qe12 * fc.pe12)}</div>
-              <div style={{ position: 'absolute', right: '10cm', top: '14.5cm', fontFamily: 'inherit', fontSize: '11px' }}>{fc.qe12}</div>
-            </>
-          )}
-          {fc.qe13 > 0 && (
-            <>
-              <div style={{ position: 'absolute', right: '10cm', top: '11cm', fontFamily: 'inherit', fontSize: '11px' }}>{fc.qe13}</div>
-              <div style={{ position: 'absolute', right: '14cm', top: '11cm', fontFamily: 'inherit', fontSize: '11px' }}>{formatDZD(fc.pe13)}</div>
-              <div style={{ position: 'absolute', right: '17cm', top: '11cm', fontFamily: 'inherit', fontSize: '11px' }}>{formatDZD(fc.qe13 * fc.pe13)}</div>
-              <div style={{ position: 'absolute', right: '10cm', top: '15cm', fontFamily: 'inherit', fontSize: '11px' }}>{fc.qe13}</div>
-            </>
-          )}
-          {fc.qe14 > 0 && (
-            <>
-              <div style={{ position: 'absolute', right: '10cm', top: '11.5cm', fontFamily: 'inherit', fontSize: '11px' }}>{fc.qe14}</div>
-              <div style={{ position: 'absolute', right: '14cm', top: '11.5cm', fontFamily: 'inherit', fontSize: '11px' }}>{formatDZD(fc.pe14)}</div>
-              <div style={{ position: 'absolute', right: '17cm', top: '11.5cm', fontFamily: 'inherit', fontSize: '11px' }}>{formatDZD(fc.qe14 * fc.pe14)}</div>
-              <div style={{ position: 'absolute', right: '10cm', top: '15.5cm', fontFamily: 'inherit', fontSize: '11px' }}>{fc.qe14}</div>
-            </>
-          )}
+          {([
+            { qe: fc.qe11, pe: fc.pe11, pa: fc.pa11, topEau: '10.5cm', topAss: '14.5cm' },
+            { qe: fc.qe12, pe: fc.pe12, pa: fc.pa12, topEau: '11cm', topAss: '15cm' },
+            { qe: fc.qe13, pe: fc.pe13, pa: fc.pa13, topEau: '11.5cm', topAss: '15.5cm' },
+            { qe: fc.qe14, pe: fc.pe14, pa: fc.pa14, topEau: '12cm', topAss: '16cm' },
+          ]).map(({ qe, pe, pa, topEau, topAss }, i) => qe > 0 && (
+            <React.Fragment key={i}>
+              {/* Eau */}
+              <div style={{ position: 'absolute', right: '10cm', top: topEau, fontFamily: 'inherit', fontSize: '11px' }}>{qe}</div>
+              <div style={{ position: 'absolute', right: '14cm', top: topEau, fontFamily: 'inherit', fontSize: '11px' }}>{formatDZD(pe)}</div>
+              <div style={{ position: 'absolute', right: '17cm', top: topEau, fontFamily: 'inherit', fontSize: '11px' }}>{formatDZD(qe * pe)}</div>
+
+              {/* Assainissement (seulement si PA > 0) */}
+              {pa > 0 && (
+                <>
+                  <div style={{ position: 'absolute', right: '10cm', top: topAss, fontFamily: 'inherit', fontSize: '11px' }}>{qe}</div>
+                  <div style={{ position: 'absolute', right: '14cm', top: topAss, fontFamily: 'inherit', fontSize: '11px' }}>{formatDZD(pa)}</div>
+                  <div style={{ position: 'absolute', right: '17cm', top: topAss, fontFamily: 'inherit', fontSize: '11px' }}>{formatDZD(qe * pa)}</div>
+                </>
+              )}
+            </React.Fragment>
+          ))}
         </>
       )}
 
@@ -224,34 +215,35 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture }) =
       {/* MONTANTS CALCULÉS                                        */}
       {/* ======================================================= */}
 
+      {/* RFA */}
+      {detail.rfaHT > 0 && (
+        <div style={{ position: 'absolute', right: '17cm', top: '10cm', width: '4cm', textAlign: 'right', fontFamily: 'inherit', fontSize: '11px' }}>
+          {formatDZD(detail.rfaHT)}
+        </div>
+      )}
+
       {/* Sous-total Eau HT */}
-      <div style={{ position: 'absolute', right: '17cm', top: '12cm', width: '4cm', textAlign: 'right', fontFamily: 'inherit', fontSize: '11px', fontWeight: 'bold' }}>
+      <div style={{ position: 'absolute', right: '17cm', top: '12.5cm', width: '4cm', textAlign: 'right', fontFamily: 'inherit', fontSize: '11px', fontWeight: 'bold' }}>
         {formatDZD(detail.eauHT + detail.rfaHT)}
       </div>
 
-      {/* RFA */}
-      {detail.rfaHT > 0 && (
-        <div style={{ position: 'absolute', right: '17cm', top: '9.5cm', width: '4cm', textAlign: 'right', fontFamily: 'inherit', fontSize: '11px' }}>
-          {formatDZD(detail.rfaHT)}
+      {/* RFASS */}
+      {detail.rfassHT > 0 && (
+        <div style={{ position: 'absolute', right: '17cm', top: '14cm', width: '4cm', textAlign: 'right', fontFamily: 'inherit', fontSize: '11px' }}>
+          {formatDZD(detail.rfassHT)}
         </div>
       )}
 
       {/* Sous-total Assainissement HT */}
       {detail.assHT > 0 && (
-        <div style={{ position: 'absolute', right: '1cm', top: '17.8cm', width: '4cm', textAlign: 'right', fontFamily: 'inherit', fontSize: '11px', fontWeight: 'bold' }}>
-          {formatDZD(detail.assHT)}
+        <div style={{ position: 'absolute', right: '17cm', top: '16.5cm', width: '4cm', textAlign: 'right', fontFamily: 'inherit', fontSize: '11px', fontWeight: 'bold' }}>
+          {formatDZD(detail.rfassHT + detail.assHT)}
         </div>
       )}
 
-      {/* RFASS */}
-      {detail.rfassHT > 0 && (
-        <div style={{ position: 'absolute', right: '17cm', top: '13.5cm', width: '4cm', textAlign: 'right', fontFamily: 'inherit', fontSize: '11px' }}>
-          {formatDZD(detail.rfassHT)}
-        </div>
-      )}
 
       {/* Sous-total HT (1)+(2) */}
-      <div style={{ position: 'absolute', right: '1cm', top: '19.2cm', width: '4cm', textAlign: 'right', fontFamily: 'inherit', fontSize: '11px', fontWeight: 'bold' }}>
+      <div style={{ position: 'absolute', right: '19cm', top: '19.2cm', width: '4cm', textAlign: 'right', fontFamily: 'inherit', fontSize: '11px', fontWeight: 'bold' }}>
         {formatDZD(detail.montantHT)}
       </div>
 

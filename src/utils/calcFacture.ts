@@ -132,8 +132,36 @@ const calcAssHT = (eauHT: number, f: FactureCalc, groupe: Groupe): number => {
     return f.qte === 0 ? 0 : f.qeun * f.paun;
   }
 
-  // Groupes A et D : taux % sur Eau HT
+  // Groupe A : essayer PA par tranche en priorité, sinon taux %
+  if (groupe === 'A') {
+    const assParTranches =
+      (f.qe11 * f.pa11) +
+      (f.qe12 * f.pa12) +
+      (f.qe13 * f.pa13) +
+      (f.qe14 * f.pa14);
+    if (assParTranches > 0) return assParTranches;
+  }
+
+  // Groupes A et D (fallback) : taux % sur Eau HT
   return eauHT * (f.ass / 100);
+};
+
+// ─────────────────────────────────────────────────────────────
+// TVA Eau — calculée par tranche pour groupe A (comme EPEOR)
+// ─────────────────────────────────────────────────────────────
+
+const calcTvaEauHT = (eauHT: number, f: FactureCalc, groupe: Groupe): number => {
+  if (groupe === 'A') {
+    // Arrondi par tranche pour reproduire le comportement exact du système EPEOR
+    // (évite l'écart de 1 centime dû à l'accumulation d'arrondis)
+    return (
+      Math.round(f.qe11 * f.pe11 * f.tveau) / 100 +
+      Math.round(f.qe12 * f.pe12 * f.tveau) / 100 +
+      Math.round(f.qe13 * f.pe13 * f.tveau) / 100 +
+      Math.round(f.qe14 * f.pe14 * f.tveau) / 100
+    );
+  }
+  return eauHT * (f.tveau / 100);
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -171,7 +199,7 @@ export const calcDetailFacture = (f: FactureCalc): DetailFacture => {
   const assHT   = calcAssHT(eauHT, f, groupe);
   const hasRDG  = groupe !== 'B';
 
-  const tvaEau     = eauHT  * (f.tveau  / 100);
+  const tvaEau     = calcTvaEauHT(eauHT, f, groupe);  // arrondi par tranche pour groupe A
   const rfaHT      = f.rfa;
   const tvaRfa     = rfaHT  * (f.tvrfa  / 100);
   const rfassHT    = f.rfass > 0 ? f.rfass : 0;
