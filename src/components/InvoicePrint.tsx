@@ -145,15 +145,15 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture }) =
         {abonne.num_serie} {getEtatCptLabel(facture.etat_cpt)}
       </div>
 
-      <div style={{ position: 'absolute', left: '4cm', top: '6.5cm', fontFamily: 'inherit', fontSize: '12px' }}>
+      <div style={{ position: 'absolute', left: '5cm', top: '6.5cm', fontFamily: 'inherit', fontSize: '12px' }}>
         {facture.ancien_index}
       </div>
 
-      <div style={{ position: 'absolute', left: '4cm', top: '7.1cm', fontFamily: 'inherit', fontSize: '12px' }}>
+      <div style={{ position: 'absolute', left: '5cm', top: '7.1cm', fontFamily: 'inherit', fontSize: '12px' }}>
         {facture.nouveau_index}
       </div>
 
-      <div style={{ position: 'absolute', left: '4cm', top: '7.8cm', fontFamily: 'inherit', fontSize: '12px', direction: 'rtl' }}>
+      <div style={{ position: 'absolute', left: '5cm', top: '7.8cm', fontFamily: 'inherit', fontSize: '12px', direction: 'rtl' }}>
         {facture.consommation} <sup>3</sup>م
       </div>
 
@@ -161,19 +161,19 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture }) =
       {/* BLOC ABONNÉ — COLONNE DROITE : Identification Client    */}
       {/* ======================================================= */}
 
-      <div style={{ position: 'absolute', right: '6cm', top: '5.8cm', width: '8cm', textAlign: 'right', direction: 'rtl', fontFamily: 'inherit', fontSize: '12px', fontWeight: 'bold' }}>
+      <div style={{ position: 'absolute', right: '6cm', top: '5.8cm', width: '8cm', textAlign: 'right', fontFamily: 'inherit', fontSize: '12px', fontWeight: 'bold' }}>
         {abonne.code_unite} {abonne.code_secteur} {abonne.echelon} {abonne.numab} (TRN : {abonne.tournee})
       </div>
 
-      <div style={{ position: 'absolute', right: '1cm', top: '6.5cm', width: '8cm', textAlign: 'right', direction: 'rtl', fontFamily: 'inherit', fontSize: '12px', fontWeight: 'bold' }}>
+      <div style={{ position: 'absolute', right: '4cm', top: '6.5cm', width: '8cm', textAlign: 'right', direction: 'rtl', fontFamily: 'inherit', fontSize: '12px', fontWeight: 'bold' }}>
         {abonne.raw_type_abonne} - {abonne.type_abonne_arabe || abonne.type_abonne}
       </div>
 
-      <div style={{ position: 'absolute', right: '1cm', top: '7.1cm', width: '8cm', textAlign: 'right', direction: 'rtl', fontFamily: 'inherit', fontSize: '14px', fontWeight: 'bold' }}>
+      <div style={{ position: 'absolute', right: '4cm', top: '7.1cm', width: '8cm', textAlign: 'right', direction: 'rtl', fontFamily: 'inherit', fontSize: '14px', fontWeight: 'bold' }}>
         {abonne.nom_arabe || abonne.nom_prenom}
       </div>
 
-      <div style={{ position: 'absolute', right: '1cm', top: '7.9cm', width: '8cm', textAlign: 'right', direction: 'rtl', fontFamily: 'inherit', fontSize: '12px', fontWeight: 'bold' }}>
+      <div style={{ position: 'absolute', right: '4cm', top: '7.9cm', width: '8cm', textAlign: 'right', direction: 'rtl', fontFamily: 'inherit', fontSize: '12px', fontWeight: 'bold' }}>
         {abonne.rue_arabe || abonne.adresse}
         {abonne.bloc_arabe ? ` - عمارة: ${abonne.bloc_arabe}` : ''}
         {abonne.ndom_arabe ? ` - رقم: ${abonne.ndom_arabe}` : ''}
@@ -305,7 +305,7 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture }) =
       {/* CODE-BARRES                                              */}
       {/* ======================================================= */}
 
-      <div style={{ position: 'absolute', left: '15cm', top: '5.6cm', height: '0.6cm', overflow: 'hidden' }}>
+      <div style={{ position: 'absolute', left: '15cm', top: '5.8cm', height: '0.4cm', overflow: 'hidden' }}>
         <img
           src={`https://barcodeapi.org/api/128/${abonne.numab}`}
           alt="Barcode"
