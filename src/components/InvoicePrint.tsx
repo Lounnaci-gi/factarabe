@@ -187,30 +187,30 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture }) =
         <>
           {fc.qe11 > 0 && (
             <>
-              <div style={{ position: 'absolute', right: '13cm', top: '10.3cm', fontFamily: 'inherit', fontSize: '11px' }}>{fc.qe11}</div>
-              <div style={{ position: 'absolute', right: '10cm', top: '10.3cm', fontFamily: 'inherit', fontSize: '11px' }}>{formatDZD(fc.pe11)}</div>
-              <div style={{ position: 'absolute', right: '7cm', top: '10.3cm', fontFamily: 'inherit', fontSize: '11px' }}>{formatDZD(fc.qe11 * fc.pe11)}</div>
+              <div style={{ position: 'absolute', right: '8cm', top: '10cm', fontFamily: 'inherit', fontSize: '11px' }}>{fc.qe11}</div>
+              <div style={{ position: 'absolute', right: '10cm', top: '10cm', fontFamily: 'inherit', fontSize: '11px' }}>{formatDZD(fc.pe11)}</div>
+              <div style={{ position: 'absolute', right: '13cm', top: '10cm', fontFamily: 'inherit', fontSize: '11px' }}>{formatDZD(fc.qe11 * fc.pe11)}</div>
             </>
           )}
           {fc.qe12 > 0 && (
             <>
-              <div style={{ position: 'absolute', right: '13cm', top: '10.9cm', fontFamily: 'inherit', fontSize: '11px' }}>{fc.qe12}</div>
-              <div style={{ position: 'absolute', right: '10cm', top: '10.9cm', fontFamily: 'inherit', fontSize: '11px' }}>{formatDZD(fc.pe12)}</div>
-              <div style={{ position: 'absolute', right: '7cm', top: '10.9cm', fontFamily: 'inherit', fontSize: '11px' }}>{formatDZD(fc.qe12 * fc.pe12)}</div>
+              <div style={{ position: 'absolute', right: '8cm', top: '11cm', fontFamily: 'inherit', fontSize: '11px' }}>{fc.qe12}</div>
+              <div style={{ position: 'absolute', right: '10cm', top: '11cm', fontFamily: 'inherit', fontSize: '11px' }}>{formatDZD(fc.pe12)}</div>
+              <div style={{ position: 'absolute', right: '13cm', top: '11cm', fontFamily: 'inherit', fontSize: '11px' }}>{formatDZD(fc.qe12 * fc.pe12)}</div>
             </>
           )}
           {fc.qe13 > 0 && (
             <>
-              <div style={{ position: 'absolute', right: '13cm', top: '11.5cm', fontFamily: 'inherit', fontSize: '11px' }}>{fc.qe13}</div>
-              <div style={{ position: 'absolute', right: '10cm', top: '11.5cm', fontFamily: 'inherit', fontSize: '11px' }}>{formatDZD(fc.pe13)}</div>
-              <div style={{ position: 'absolute', right: '7cm', top: '11.5cm', fontFamily: 'inherit', fontSize: '11px' }}>{formatDZD(fc.qe13 * fc.pe13)}</div>
+              <div style={{ position: 'absolute', right: '8cm', top: '12cm', fontFamily: 'inherit', fontSize: '11px' }}>{fc.qe13}</div>
+              <div style={{ position: 'absolute', right: '10cm', top: '12cm', fontFamily: 'inherit', fontSize: '11px' }}>{formatDZD(fc.pe13)}</div>
+              <div style={{ position: 'absolute', right: '13cm', top: '12cm', fontFamily: 'inherit', fontSize: '11px' }}>{formatDZD(fc.qe13 * fc.pe13)}</div>
             </>
           )}
           {fc.qe14 > 0 && (
             <>
-              <div style={{ position: 'absolute', right: '13cm', top: '12.1cm', fontFamily: 'inherit', fontSize: '11px' }}>{fc.qe14}</div>
-              <div style={{ position: 'absolute', right: '10cm', top: '12.1cm', fontFamily: 'inherit', fontSize: '11px' }}>{formatDZD(fc.pe14)}</div>
-              <div style={{ position: 'absolute', right: '7cm', top: '12.1cm', fontFamily: 'inherit', fontSize: '11px' }}>{formatDZD(fc.qe14 * fc.pe14)}</div>
+              <div style={{ position: 'absolute', right: '8cm', top: '13cm', fontFamily: 'inherit', fontSize: '11px' }}>{fc.qe14}</div>
+              <div style={{ position: 'absolute', right: '10cm', top: '13cm', fontFamily: 'inherit', fontSize: '11px' }}>{formatDZD(fc.pe14)}</div>
+              <div style={{ position: 'absolute', right: '13cm', top: '13cm', fontFamily: 'inherit', fontSize: '11px' }}>{formatDZD(fc.qe14 * fc.pe14)}</div>
             </>
           )}
         </>

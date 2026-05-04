@@ -46,7 +46,7 @@ export interface FactureCalc {
   qte: number;
 }
 
-export interface DetailFacture {
+interface DetailFacture {
   // Eau
   eauHT: number;
   tvaEau: number;
@@ -211,13 +211,6 @@ export const calcDetailFacture = (f: FactureCalc): DetailFacture => {
     montantTTC,
   };
 };
-
-// ─────────────────────────────────────────────────────────────
-// Helper : montant TTC uniquement
-// ─────────────────────────────────────────────────────────────
-
-export const calcMontantTC = (f: FactureCalc): number =>
-  calcDetailFacture(f).montantTTC;
 
 // ─────────────────────────────────────────────────────────────
 // Helper : formatage monétaire DZD
