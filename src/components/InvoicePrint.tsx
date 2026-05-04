@@ -242,9 +242,9 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture }) =
       )}
 
 
-      {/* Sous-total HT (1)+(2) */}
-      <div style={{ position: 'absolute', right: '19cm', top: '19.2cm', width: '4cm', textAlign: 'right', fontFamily: 'inherit', fontSize: '11px', fontWeight: 'bold' }}>
-        {formatDZD(detail.montantHT)}
+      {/* Sous-total HT (1)+(2) = Eau+RFA + Ass+RFASS  (sans RQE/REE/RDG) */}
+      <div style={{ position: 'absolute', right: '17cm', top: '17.2cm', width: '4cm', textAlign: 'right', fontFamily: 'inherit', fontSize: '11px', fontWeight: 'bold' }}>
+        {formatDZD(detail.eauHT + detail.rfaHT + detail.assHT + detail.rfassHT)}
       </div>
 
       {/* TVA Eau */}
