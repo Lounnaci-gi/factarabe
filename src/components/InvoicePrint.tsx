@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Abonne, Facture } from '../types';
-import { calcDetailFacture, formatDZD, type FactureCalc } from '../utils/calcFacture';
+import { calcDetailFacture, formatDZD, type FactureCalc, calculerTimbre } from '../utils/calcFacture';
 
 // ─────────────────────────────────────────────────────────────
 // Mapping Facture → FactureCalc
@@ -84,7 +84,7 @@ const colQte = { fontFamily: 'inherit', fontSize: '11px' } as const;
 // Positions colonnes table Eau / Assainissement
 const C_MONTANT = '17.5cm'; // Montant HT (colonne gauche)
 const C_PRIX = '13.5cm'; // Prix unitaire
-const C_QTE = '10.5cm'; // Quantité
+const C_QTE = '9cm'; // Quantité
 
 // Positions colonnes section Taxes
 const T_MONTANT = '17.5cm'; // Montant (DA)
@@ -98,13 +98,25 @@ const T_TAUX = '13.5cm';    // Taux
 interface InvoicePrintProps {
   abonne: Abonne;
   facture: Facture;
+  allFactures?: Facture[];
 }
 
-export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture }) => {
+export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture, allFactures }) => {
   const fc = toFactureCalc(facture);
   const detail = calcDetailFacture(fc);
-  const timbre = Number(facture.timbre ?? 0);
-  const dusAnterieurs = Number(facture.dus_anterieurs ?? 0);
+  // Calcul dynamique des dus antérieurs : Somme des factures impayées strictement avant celle-ci
+  const dusAnterieurs = allFactures
+    ? allFactures
+      .filter(f => f.date_fact < facture.date_fact && !f.date_reglement)
+      .reduce((sum, f) => sum + f.montant, 0)
+    : Number(facture.dus_anterieurs ?? 0);
+
+  // Calcul du timbre : Si déjà payée (date_reglement présent), on garde le timbre original du DBF.
+  // Si impayée, on calcule le timbre sur le total (TTC + Dus) selon la règle des 1%.
+  const totalTTCPlusDus = detail.montantTTC + dusAnterieurs;
+  const timbre = facture.date_reglement
+    ? Number(facture.timbre ?? 0)
+    : calculerTimbre(totalTTCPlusDus);
   const montantSansTimbre = detail.montantTTC + dusAnterieurs;
   const netAPayer = Math.round((montantSansTimbre + timbre) * 100) / 100;
 
@@ -124,13 +136,13 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture }) =
       {/* HAUT DROITE : Unité / Centre / Caisse                   */}
       {/* ======================================================= */}
 
-      <div style={{ position: 'absolute', right: '4cm', top: '3.2cm', width: '5cm', textAlign: 'right', direction: 'rtl', fontFamily: 'inherit', fontSize: '12px', fontWeight: 'bold' }}>
+      <div style={{ position: 'absolute', right: '4cm', top: '3.2cm', width: '5cm', textAlign: 'right', direction: 'rtl', fontFamily: 'inherit', fontSize: '11px', fontWeight: 'normal' }}>
         {abonne.nom_unite_arabe || abonne.nom_unite}
       </div>
-      <div style={{ position: 'absolute', right: '4cm', top: '4cm', width: '5cm', textAlign: 'right', direction: 'rtl', fontFamily: 'inherit', fontSize: '12px', fontWeight: 'bold' }}>
+      <div style={{ position: 'absolute', right: '4cm', top: '4cm', width: '5cm', textAlign: 'right', direction: 'rtl', fontFamily: 'inherit', fontSize: '11px', fontWeight: 'normal' }}>
         {abonne.nom_secteur_arabe || abonne.nom_secteur}
       </div>
-      <div style={{ position: 'absolute', right: '4cm', top: '4.8cm', width: '5cm', textAlign: 'right', direction: 'rtl', fontFamily: 'inherit', fontSize: '13px', fontWeight: 'bold' }}>
+      <div style={{ position: 'absolute', right: '4cm', top: '4.8cm', width: '5cm', textAlign: 'right', direction: 'rtl', fontFamily: 'inherit', fontSize: '11px', fontWeight: 'normal' }}>
         {abonne.nom_caisse_arabe || abonne.nom_caisse}
       </div>
 
@@ -138,13 +150,13 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture }) =
       {/* CENTRE : Numéro Facture / Période / Date Facture         */}
       {/* ======================================================= */}
 
-      <div style={{ position: 'absolute', left: '7cm', top: '3.2cm', width: '4cm', textAlign: 'right', direction: 'rtl', fontFamily: 'inherit', fontSize: '12px', fontWeight: 'bold' }}>
+      <div style={{ position: 'absolute', left: '7cm', top: '3.2cm', width: '4cm', textAlign: 'right', direction: 'rtl', fontFamily: 'inherit', fontSize: '11px', fontWeight: 'normal' }}>
         {abonne.numab} / {facture.date_fact.slice(0, 7)}
       </div>
-      <div style={{ position: 'absolute', left: '7cm', top: '4cm', width: '5cm', textAlign: 'left', direction: 'rtl', whiteSpace: 'nowrap', fontFamily: 'inherit', fontSize: '11px', fontWeight: 'bold' }}>
+      <div style={{ position: 'absolute', left: '7cm', top: '4cm', width: '5cm', textAlign: 'left', direction: 'rtl', whiteSpace: 'nowrap', fontFamily: 'inherit', fontSize: '11px', fontWeight: 'normal' }}>
         من {facture.date_releve_prec.split('-').reverse().join('/')} إلى {facture.date_releve.split('-').reverse().join('/')}
       </div>
-      <div style={{ position: 'absolute', left: '7cm', top: '4.8cm', width: '4cm', textAlign: 'right', direction: 'rtl', fontFamily: 'inherit', fontSize: '11px', fontWeight: 'bold' }}>
+      <div style={{ position: 'absolute', left: '7cm', top: '4.8cm', width: '4cm', textAlign: 'right', direction: 'rtl', fontFamily: 'inherit', fontSize: '11px', fontWeight: 'normal' }}>
         {facture.date_saisie.split('-').reverse().join('/')}
       </div>
 
@@ -152,13 +164,13 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture }) =
       {/* GAUCHE : Dates Relevés                                   */}
       {/* ======================================================= */}
 
-      <div style={{ position: 'absolute', left: '2cm', top: '3.2cm', fontFamily: 'inherit', fontSize: '11px', fontWeight: 'bold' }}>
+      <div style={{ position: 'absolute', left: '2cm', top: '3.2cm', fontFamily: 'inherit', fontSize: '11px', fontWeight: 'normal' }}>
         {facture.date_releve.split('-').reverse().join('/')}
       </div>
-      <div style={{ position: 'absolute', left: '2cm', top: '4cm', fontFamily: 'inherit', fontSize: '11px', fontWeight: 'bold' }}>
+      <div style={{ position: 'absolute', left: '2cm', top: '4cm', fontFamily: 'inherit', fontSize: '11px', fontWeight: 'normal' }}>
         {facture.date_prochain_releve.split('-').reverse().join('/')}
       </div>
-      <div style={{ position: 'absolute', left: '2cm', top: '4.8cm', fontFamily: 'inherit', fontSize: '11px', fontWeight: 'bold' }}>
+      <div style={{ position: 'absolute', left: '2cm', top: '4.8cm', fontFamily: 'inherit', fontSize: '11px', fontWeight: 'normal' }}>
         {facture.date_prochaine_facture.split('-').reverse().join('/')}
       </div>
 
@@ -166,16 +178,16 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture }) =
       {/* ABONNÉ GAUCHE : Compteur                                 */}
       {/* ======================================================= */}
 
-      <div style={{ position: 'absolute', left: '4cm', top: '5.8cm', fontFamily: 'inherit', fontSize: '12px', direction: 'ltr' }}>
+      <div style={{ position: 'absolute', left: '4cm', top: '5.8cm', fontFamily: 'inherit', fontSize: '11px', direction: 'ltr' }}>
         {abonne.num_serie} {getEtatCptLabel(facture.etat_cpt)}
       </div>
-      <div style={{ position: 'absolute', left: '5cm', top: '6.5cm', fontFamily: 'inherit', fontSize: '12px' }}>
+      <div style={{ position: 'absolute', left: '5cm', top: '6.5cm', fontFamily: 'inherit', fontSize: '11px' }}>
         {facture.ancien_index}
       </div>
-      <div style={{ position: 'absolute', left: '5cm', top: '7.1cm', fontFamily: 'inherit', fontSize: '12px' }}>
+      <div style={{ position: 'absolute', left: '5cm', top: '7.1cm', fontFamily: 'inherit', fontSize: '11px' }}>
         {facture.nouveau_index}
       </div>
-      <div style={{ position: 'absolute', left: '5cm', top: '7.8cm', fontFamily: 'inherit', fontSize: '12px', direction: 'rtl' }}>
+      <div style={{ position: 'absolute', left: '5cm', top: '7.8cm', fontFamily: 'inherit', fontSize: '11px', direction: 'rtl' }}>
         {facture.consommation} <sup>3</sup>م
       </div>
 
@@ -183,16 +195,16 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture }) =
       {/* ABONNÉ DROITE : Identification Client                    */}
       {/* ======================================================= */}
 
-      <div style={{ position: 'absolute', right: '6cm', top: '5.8cm', width: '8cm', textAlign: 'right', fontFamily: 'inherit', fontSize: '12px', fontWeight: 'bold' }}>
+      <div style={{ position: 'absolute', right: '6cm', top: '6cm', width: '8cm', textAlign: 'right', fontFamily: 'inherit', fontSize: '11px', fontWeight: 'normal' }}>
         {abonne.code_unite} {abonne.code_secteur} {abonne.echelon} {abonne.numab} (TRN : {abonne.tournee})
       </div>
-      <div style={{ position: 'absolute', right: '4cm', top: '6.5cm', width: '8cm', textAlign: 'right', direction: 'rtl', fontFamily: 'inherit', fontSize: '12px', fontWeight: 'bold' }}>
+      <div style={{ position: 'absolute', right: '4cm', top: '6.7cm', width: '8cm', textAlign: 'right', direction: 'rtl', fontFamily: 'inherit', fontSize: '11px', fontWeight: 'normal' }}>
         {abonne.raw_type_abonne} - {abonne.type_abonne_arabe || abonne.type_abonne}
       </div>
-      <div style={{ position: 'absolute', right: '4cm', top: '7.1cm', width: '8cm', textAlign: 'right', direction: 'rtl', fontFamily: 'inherit', fontSize: '14px', fontWeight: 'bold' }}>
+      <div style={{ position: 'absolute', right: '4cm', top: '7.5cm', width: '8cm', textAlign: 'right', direction: 'rtl', fontFamily: 'inherit', fontSize: '11px', fontWeight: 'normal' }}>
         {abonne.nom_arabe || abonne.nom_prenom}
       </div>
-      <div style={{ position: 'absolute', right: '4cm', top: '7.9cm', width: '8cm', textAlign: 'right', direction: 'rtl', fontFamily: 'inherit', fontSize: '12px', fontWeight: 'bold' }}>
+      <div style={{ position: 'absolute', right: '4cm', top: '8.2cm', width: '8cm', textAlign: 'right', direction: 'rtl', fontFamily: 'inherit', fontSize: '11px', fontWeight: 'normal' }}>
         {abonne.rue_arabe || abonne.adresse}
         {abonne.bloc_arabe ? ` - عمارة: ${abonne.bloc_arabe}` : ''}
         {abonne.ndom_arabe ? ` - رقم: ${abonne.ndom_arabe}` : ''}
@@ -243,10 +255,10 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture }) =
       )}
 
       {/* Sous-Total Eau (1) = eauHT + rfaHT */}
-      <div style={{ position: 'absolute', right: '14.5cm', top: '13.1cm', fontFamily: 'inherit', fontSize: '11px', direction: 'rtl', fontWeight: 'bold' }}>
+      <div style={{ position: 'absolute', right: '14.5cm', top: '13.1cm', fontFamily: 'inherit', fontSize: '11px', direction: 'rtl', fontWeight: 'normal' }}>
 
       </div>
-      <div style={{ position: 'absolute', right: C_MONTANT, top: '13.1cm', ...colMontant, fontWeight: 'bold' }}>
+      <div style={{ position: 'absolute', right: C_MONTANT, top: '13.1cm', ...colMontant, fontWeight: 'normal' }}>
         {formatDZD(detail.sousTotal1)}
       </div>
 
@@ -278,10 +290,10 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture }) =
       )}
 
       {/* Sous-Total Assainissement (2) = assHT + rfassHT */}
-      <div style={{ position: 'absolute', right: '14.5cm', top: '17.9cm', fontFamily: 'inherit', fontSize: '11px', direction: 'rtl', fontWeight: 'bold' }}>
+      <div style={{ position: 'absolute', right: '14.5cm', top: '17.9cm', fontFamily: 'inherit', fontSize: '11px', direction: 'rtl', fontWeight: 'normal' }}>
 
       </div>
-      <div style={{ position: 'absolute', right: C_MONTANT, top: '17.9cm', ...colMontant, fontWeight: 'bold' }}>
+      <div style={{ position: 'absolute', right: C_MONTANT, top: '17.9cm', ...colMontant, fontWeight: 'normal' }}>
         {formatDZD(detail.sousTotal2)}
       </div>
 
@@ -289,10 +301,10 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture }) =
       {/* SOUS-TOTAL HT (1)+(2)                                    */}
       {/* ======================================================= */}
 
-      <div style={{ position: 'absolute', right: '14.5cm', top: '18.6cm', fontFamily: 'inherit', fontSize: '11px', direction: 'rtl', fontWeight: 'bold' }}>
+      <div style={{ position: 'absolute', right: '14.5cm', top: '18.6cm', fontFamily: 'inherit', fontSize: '11px', direction: 'rtl', fontWeight: 'normal' }}>
 
       </div>
-      <div style={{ position: 'absolute', right: C_MONTANT, top: '18.6cm', ...colMontant, fontWeight: 'bold' }}>
+      <div style={{ position: 'absolute', right: C_MONTANT, top: '18.6cm', ...colMontant, fontWeight: 'normal' }}>
         {formatDZD(detail.sousTotal12)}
       </div>
 
@@ -337,7 +349,7 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture }) =
       )}
 
       {/* Sous-Total Taxes (3) */}
-      <div style={{ position: 'absolute', right: T_MONTANT, top: '22.1cm', ...colMontant, fontWeight: 'bold' }}>
+      <div style={{ position: 'absolute', right: T_MONTANT, top: '22.1cm', ...colMontant, fontWeight: 'normal' }}>
         {formatDZD(detail.sousTotal3)}
       </div>
 
@@ -346,7 +358,7 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture }) =
       {/* ======================================================= */}
 
       {/* Montant de la Facture TTC (1)+(2)+(3) */}
-      <div style={{ position: 'absolute', right: C_QTE, top: '22.8cm', width: '2.5cm', textAlign: 'right', fontFamily: 'inherit', fontSize: '12px', fontWeight: 'bold' }}>
+      <div style={{ position: 'absolute', right: C_QTE, top: '22.8cm', width: '2.5cm', textAlign: 'right', fontFamily: 'inherit', fontSize: '11px', fontWeight: 'normal' }}>
         {formatDZD(detail.montantTTC)}
       </div>
 
@@ -368,7 +380,7 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture }) =
       )}
 
       {/* Net à Payer */}
-      <div style={{ position: 'absolute', right: C_QTE, top: '25.8cm', width: '2.5cm', textAlign: 'right', fontFamily: 'inherit', fontSize: '13px', fontWeight: 'bold' }}>
+      <div style={{ position: 'absolute', right: C_QTE, top: '25.8cm', width: '2.5cm', textAlign: 'right', fontFamily: 'inherit', fontSize: '11px', fontWeight: 'normal' }}>
         {formatDZD(netAPayer)}
       </div>
 

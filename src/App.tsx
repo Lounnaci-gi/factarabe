@@ -69,7 +69,11 @@ export default function App() {
 
       {/* Composant d'impression (masqué à l'écran) */}
       {data && selectedFacture && (
-        <InvoicePrint abonne={data.abonne} facture={selectedFacture} />
+        <InvoicePrint 
+          abonne={data.abonne} 
+          facture={selectedFacture} 
+          allFactures={data.factures} 
+        />
       )}
 
       {/* Mini animation CSS intégrée pour la démo */}

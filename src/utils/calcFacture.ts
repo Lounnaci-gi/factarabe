@@ -270,3 +270,13 @@ export const formatDZD = (value: number): string =>
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(value);
+
+// ─────────────────────────────────────────────────────────────
+// Calcul du timbre fiscal (1% arrondi au supérieur, max 2500)
+// ─────────────────────────────────────────────────────────────
+
+export const calculerTimbre = (montantTTC: number): number => {
+  if (montantTTC <= 0) return 0;
+  const timbre = Math.ceil(montantTTC * 0.01);
+  return Math.min(timbre, 2500);
+};

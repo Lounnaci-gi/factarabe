@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { Facture } from '../types';
-import { calcDetailFacture, formatDZD } from '../utils/calcFacture';
+import { calcDetailFacture, formatDZD, calculerTimbre } from '../utils/calcFacture';
 import type { FactureCalc } from '../utils/calcFacture';
 
 // ─── Conversion Facture → FactureCalc ────────────────────────
@@ -43,15 +43,29 @@ const getEtatCptLabel = (etat: string | number | undefined | null) => {
 };
 
 // ─── Panneau détail tranches ──────────────────────────────────
-const FactureDetail: React.FC<{ f: Facture }> = ({ f }) => {
-  const fc     = toFC(f);
+interface FactureDetailProps {
+  facture: Facture;
+  allFactures: Facture[];
+}
+
+const FactureDetail: React.FC<FactureDetailProps> = ({ facture, allFactures }) => {
+  const fc     = toFC(facture);
   const d      = calcDetailFacture(fc);
   const isE    = fc.type === 'E';
   const typ    = fc.typabon;
   const isA    = isE && typ >= 10 && typ <= 19 && typ !== 15;
   const isB    = isE && typ === 15;
   const isCD   = isE && (typ >= 20 || typ === 30);
-  const timbre = Number(f.timbre ?? 0);
+  // Calcul dynamique des dus antérieurs
+  const dusAnterieurs = allFactures
+    .filter(f => f.date_fact < facture.date_fact && !f.date_reglement)
+    .reduce((sum, f) => sum + f.montant, 0);
+
+  const timbre = facture.date_reglement
+    ? Number(facture.timbre ?? 0)
+    : calculerTimbre(d.montantTTC + dusAnterieurs);
+
+  const netAPayer = Math.round((d.montantTTC + dusAnterieurs + timbre) * 100) / 100;
 
   const Row = ({ label, value, bold }: { label: string; value: string; bold?: boolean }) => (
     <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
@@ -137,13 +151,18 @@ const FactureDetail: React.FC<{ f: Facture }> = ({ f }) => {
           {/* ── Timbre ── */}
           {timbre > 0 && <Row label="طابع" value={formatDZD(timbre)} />}
 
+          {/* ── Dues Antérieurs ── */}
+          {dusAnterieurs > 0 && (
+            <Row label="ديون سابقة (Dues Antérieurs)" value={formatDZD(dusAnterieurs)} />
+          )}
+
           {/* ── Net à payer ── */}
           <tr style={{ background: '#fef3c7', borderTop: '2px solid #fbbf24' }}>
             <td style={{ padding: '6px 14px', fontWeight: 'bold', fontSize: '14px', direction: 'rtl', textAlign: 'right', color: '#92400e' }}>
               صافي المبلغ الواجب دفعه
             </td>
             <td style={{ padding: '6px 14px', fontWeight: 'bold', fontSize: '14px', textAlign: 'right', fontFamily: 'monospace', color: '#92400e' }}>
-              {formatDZD(Math.round((d.montantTTC + timbre) * 100) / 100)}
+              {formatDZD(netAPayer)}
             </td>
           </tr>
         </tbody>
@@ -281,9 +300,9 @@ export const FacturesList: React.FC<FacturesListProps> = ({ factures, onPrint })
 
                     {/* ── Panneau de détail tranches ── */}
                     {isExpanded && (
-                      <tr>
-                        <td colSpan={10} style={{ padding: 0, background: 'transparent' }}>
-                          <FactureDetail f={f} />
+                      <tr key={f.id + '-detail'}>
+                        <td colSpan={10} style={{ padding: '0', background: 'transparent' }}>
+                          <FactureDetail facture={f} allFactures={factures} />
                         </td>
                       </tr>
                     )}
