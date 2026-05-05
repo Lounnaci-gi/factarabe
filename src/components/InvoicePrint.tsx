@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Abonne, Facture } from '../types';
 import { calcDetailFacture, formatDZD, type FactureCalc, calculerTimbre } from '../utils/calcFacture';
+import { numberToArabicWords } from '../utils/arabicWords';
 
 // ─────────────────────────────────────────────────────────────
 // Mapping Facture → FactureCalc
@@ -119,6 +120,7 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture, all
     : calculerTimbre(totalTTCPlusDus);
   const montantSansTimbre = detail.montantTTC + dusAnterieurs;
   const netAPayer = Math.round((montantSansTimbre + timbre) * 100) / 100;
+  const montantTTCEnLettres = numberToArabicWords(detail.montantTTC);
 
   // Groupes d'affichage
   const isGroupeA = fc.type === 'E' && fc.typabon >= 10 && fc.typabon <= 19 && fc.typabon !== 15;
@@ -359,6 +361,22 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture, all
       {/* Montant de la Facture TTC (1)+(2)+(3) */}
       <div style={{ position: 'absolute', right: C_QTE, top: '21.3cm', width: '2.5cm', textAlign: 'right', fontFamily: 'sans-serif', fontSize: '11px', fontWeight: 'normal' }}>
         {formatDZD(detail.montantTTC)}
+      </div>
+
+      {/* Montant en lettres (1)+(2)+(3) */}
+      <div style={{ 
+        position: 'absolute', 
+        right: '2cm', 
+        top: '21.8cm', 
+        width: '8cm', 
+        textAlign: 'right', 
+        direction: 'rtl', 
+        fontFamily: 'sans-serif', 
+        fontSize: '10px',
+        lineHeight: '11px',
+        wordWrap: 'break-word'
+      }}>
+        {montantTTCEnLettres}
       </div>
 
       {/* Dus antérieurs */}
