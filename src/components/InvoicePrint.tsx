@@ -39,7 +39,9 @@ const toFactureCalc = (facture: Facture): FactureCalc => ({
 // Label état compteur
 // ─────────────────────────────────────────────────────────────
 
-const getEtatCptLabel = (etat: string | number | undefined | null): string | number | undefined | null => {
+const getEtatCptLabel = (
+  etat: string | number | undefined | null
+): string | number | undefined | null => {
   if (!etat) return etat;
   const str = String(etat).toUpperCase();
 
@@ -72,6 +74,24 @@ const getEtatCptLabel = (etat: string | number | undefined | null): string | num
 };
 
 // ─────────────────────────────────────────────────────────────
+// Styles partagés (évite répétition)
+// ─────────────────────────────────────────────────────────────
+
+const colMontant = { fontFamily: 'inherit', fontSize: '11px' } as const;
+const colPrix = { fontFamily: 'inherit', fontSize: '11px' } as const;
+const colQte = { fontFamily: 'inherit', fontSize: '11px' } as const;
+
+// Positions colonnes table Eau / Assainissement
+const C_MONTANT = '17.5cm'; // Montant HT (colonne gauche)
+const C_PRIX = '13.5cm'; // Prix unitaire
+const C_QTE = '10.5cm'; // Quantité
+
+// Positions colonnes section Taxes
+const T_MONTANT = '17.5cm'; // Montant (DA)
+const T_TAUX = '13.5cm';    // Taux
+// L'assiette utilise désormais C_QTE pour l'alignement (10.5cm)
+
+// ─────────────────────────────────────────────────────────────
 // Composant principal
 // ─────────────────────────────────────────────────────────────
 
@@ -84,95 +104,94 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture }) =
   const fc = toFactureCalc(facture);
   const detail = calcDetailFacture(fc);
   const timbre = Number(facture.timbre ?? 0);
-  const netAPayer = Math.round((detail.montantTTC + timbre) * 100) / 100;
+  const dusAnterieurs = Number(facture.dus_anterieurs ?? 0);
+  const montantSansTimbre = detail.montantTTC + dusAnterieurs;
+  const netAPayer = Math.round((montantSansTimbre + timbre) * 100) / 100;
+
+  // Groupes d'affichage
+  const isGroupeA = fc.type === 'E' && fc.typabon >= 10 && fc.typabon <= 19 && fc.typabon !== 15;
+  const isTrUnique = fc.type === 'E' && (fc.typabon === 15 || fc.typabon >= 20);
+
+  // Assiette TVA = Sous-Total HT (1)+(2)
+  const tvaAssiette = detail.sousTotal12;
+  // TVA total = tvaEau + tvaRfa + tvaRfass + tvaAss
+  const tvaTotal = detail.tvaEau + detail.tvaRfa + detail.tvaRfass + detail.tvaAss;
 
   return (
     <div className="print-container">
 
       {/* ======================================================= */}
-      {/* BLOC HAUT DROITE : Unité / Secteur / Caisse             */}
+      {/* HAUT DROITE : Unité / Centre / Caisse                   */}
       {/* ======================================================= */}
 
       <div style={{ position: 'absolute', right: '4cm', top: '3.2cm', width: '5cm', textAlign: 'right', direction: 'rtl', fontFamily: 'inherit', fontSize: '12px', fontWeight: 'bold' }}>
         {abonne.nom_unite_arabe || abonne.nom_unite}
       </div>
-
       <div style={{ position: 'absolute', right: '4cm', top: '4cm', width: '5cm', textAlign: 'right', direction: 'rtl', fontFamily: 'inherit', fontSize: '12px', fontWeight: 'bold' }}>
         {abonne.nom_secteur_arabe || abonne.nom_secteur}
       </div>
-
       <div style={{ position: 'absolute', right: '4cm', top: '4.8cm', width: '5cm', textAlign: 'right', direction: 'rtl', fontFamily: 'inherit', fontSize: '13px', fontWeight: 'bold' }}>
         {abonne.nom_caisse_arabe || abonne.nom_caisse}
       </div>
 
       {/* ======================================================= */}
-      {/* BLOC CENTRAL : Numéro Facture / Période / Date Saisie   */}
+      {/* CENTRE : Numéro Facture / Période / Date Facture         */}
       {/* ======================================================= */}
 
       <div style={{ position: 'absolute', left: '7cm', top: '3.2cm', width: '4cm', textAlign: 'right', direction: 'rtl', fontFamily: 'inherit', fontSize: '12px', fontWeight: 'bold' }}>
         {abonne.numab} / {facture.date_fact.slice(0, 7)}
       </div>
-
       <div style={{ position: 'absolute', left: '7cm', top: '4cm', width: '5cm', textAlign: 'left', direction: 'rtl', whiteSpace: 'nowrap', fontFamily: 'inherit', fontSize: '11px', fontWeight: 'bold' }}>
         من {facture.date_releve_prec.split('-').reverse().join('/')} إلى {facture.date_releve.split('-').reverse().join('/')}
       </div>
-
       <div style={{ position: 'absolute', left: '7cm', top: '4.8cm', width: '4cm', textAlign: 'right', direction: 'rtl', fontFamily: 'inherit', fontSize: '11px', fontWeight: 'bold' }}>
         {facture.date_saisie.split('-').reverse().join('/')}
       </div>
 
       {/* ======================================================= */}
-      {/* BLOC GAUCHE : Dates Relevés                             */}
+      {/* GAUCHE : Dates Relevés                                   */}
       {/* ======================================================= */}
 
       <div style={{ position: 'absolute', left: '2cm', top: '3.2cm', fontFamily: 'inherit', fontSize: '11px', fontWeight: 'bold' }}>
         {facture.date_releve.split('-').reverse().join('/')}
       </div>
-
       <div style={{ position: 'absolute', left: '2cm', top: '4cm', fontFamily: 'inherit', fontSize: '11px', fontWeight: 'bold' }}>
         {facture.date_prochain_releve.split('-').reverse().join('/')}
       </div>
-
       <div style={{ position: 'absolute', left: '2cm', top: '4.8cm', fontFamily: 'inherit', fontSize: '11px', fontWeight: 'bold' }}>
         {facture.date_prochaine_facture.split('-').reverse().join('/')}
       </div>
 
       {/* ======================================================= */}
-      {/* BLOC ABONNÉ — COLONNE GAUCHE : Compteur                 */}
+      {/* ABONNÉ GAUCHE : Compteur                                 */}
       {/* ======================================================= */}
 
       <div style={{ position: 'absolute', left: '4cm', top: '5.8cm', fontFamily: 'inherit', fontSize: '12px', direction: 'ltr' }}>
         {abonne.num_serie} {getEtatCptLabel(facture.etat_cpt)}
       </div>
-
       <div style={{ position: 'absolute', left: '5cm', top: '6.5cm', fontFamily: 'inherit', fontSize: '12px' }}>
         {facture.ancien_index}
       </div>
-
       <div style={{ position: 'absolute', left: '5cm', top: '7.1cm', fontFamily: 'inherit', fontSize: '12px' }}>
         {facture.nouveau_index}
       </div>
-
       <div style={{ position: 'absolute', left: '5cm', top: '7.8cm', fontFamily: 'inherit', fontSize: '12px', direction: 'rtl' }}>
         {facture.consommation} <sup>3</sup>م
       </div>
 
       {/* ======================================================= */}
-      {/* BLOC ABONNÉ — COLONNE DROITE : Identification Client    */}
+      {/* ABONNÉ DROITE : Identification Client                    */}
       {/* ======================================================= */}
 
       <div style={{ position: 'absolute', right: '6cm', top: '5.8cm', width: '8cm', textAlign: 'right', fontFamily: 'inherit', fontSize: '12px', fontWeight: 'bold' }}>
         {abonne.code_unite} {abonne.code_secteur} {abonne.echelon} {abonne.numab} (TRN : {abonne.tournee})
       </div>
-
       <div style={{ position: 'absolute', right: '4cm', top: '6.5cm', width: '8cm', textAlign: 'right', direction: 'rtl', fontFamily: 'inherit', fontSize: '12px', fontWeight: 'bold' }}>
         {abonne.raw_type_abonne} - {abonne.type_abonne_arabe || abonne.type_abonne}
       </div>
-
       <div style={{ position: 'absolute', right: '4cm', top: '7.1cm', width: '8cm', textAlign: 'right', direction: 'rtl', fontFamily: 'inherit', fontSize: '14px', fontWeight: 'bold' }}>
         {abonne.nom_arabe || abonne.nom_prenom}
       </div>
-
       <div style={{ position: 'absolute', right: '4cm', top: '7.9cm', width: '8cm', textAlign: 'right', direction: 'rtl', fontFamily: 'inherit', fontSize: '12px', fontWeight: 'bold' }}>
         {abonne.rue_arabe || abonne.adresse}
         {abonne.bloc_arabe ? ` - عمارة: ${abonne.bloc_arabe}` : ''}
@@ -180,120 +199,176 @@ export const InvoicePrint: React.FC<InvoicePrintProps> = ({ abonne, facture }) =
       </div>
 
       {/* ======================================================= */}
-      {/* BLOC TRANCHES EAU (TYPE='E' groupe A uniquement)        */}
+      {/* SECTION EAU                                              */}
       {/* ======================================================= */}
 
-
-      {fc.type === 'E' && fc.typabon >= 10 && fc.typabon <= 19 && fc.typabon !== 15 && (
-        <>
-          {([
-            { qe: fc.qe11, pe: fc.pe11, pa: fc.pa11, topEau: '10.5cm', topAss: '14.5cm' },
-            { qe: fc.qe12, pe: fc.pe12, pa: fc.pa12, topEau: '11cm', topAss: '15cm' },
-            { qe: fc.qe13, pe: fc.pe13, pa: fc.pa13, topEau: '11.5cm', topAss: '15.5cm' },
-            { qe: fc.qe14, pe: fc.pe14, pa: fc.pa14, topEau: '12cm', topAss: '16cm' },
-          ]).map(({ qe, pe, pa, topEau, topAss }, i) => qe > 0 && (
-            <React.Fragment key={i}>
-              {/* Eau */}
-              <div style={{ position: 'absolute', right: '10cm', top: topEau, fontFamily: 'inherit', fontSize: '11px' }}>{qe}</div>
-              <div style={{ position: 'absolute', right: '14cm', top: topEau, fontFamily: 'inherit', fontSize: '11px' }}>{formatDZD(pe)}</div>
-              <div style={{ position: 'absolute', right: '17cm', top: topEau, fontFamily: 'inherit', fontSize: '11px' }}>{formatDZD(qe * pe)}</div>
-
-              {/* Assainissement (seulement si PA > 0) */}
-              {pa > 0 && (
-                <>
-                  <div style={{ position: 'absolute', right: '10cm', top: topAss, fontFamily: 'inherit', fontSize: '11px' }}>{qe}</div>
-                  <div style={{ position: 'absolute', right: '14cm', top: topAss, fontFamily: 'inherit', fontSize: '11px' }}>{formatDZD(pa)}</div>
-                  <div style={{ position: 'absolute', right: '17cm', top: topAss, fontFamily: 'inherit', fontSize: '11px' }}>{formatDZD(qe * pa)}</div>
-                </>
-              )}
-            </React.Fragment>
-          ))}
-        </>
-      )}
-
-      {/* ======================================================= */}
-      {/* MONTANTS CALCULÉS                                        */}
-      {/* ======================================================= */}
-
-      {/* RFA */}
+      {/* RFA — montant seul */}
       {detail.rfaHT > 0 && (
-        <div style={{ position: 'absolute', right: '17cm', top: '10cm', width: '4cm', textAlign: 'right', fontFamily: 'inherit', fontSize: '11px' }}>
+        <div style={{ position: 'absolute', right: C_MONTANT, top: '9.5cm', ...colMontant }}>
           {formatDZD(detail.rfaHT)}
         </div>
       )}
 
-      {/* Sous-total Eau HT */}
-      <div style={{ position: 'absolute', right: '17cm', top: '12.5cm', width: '4cm', textAlign: 'right', fontFamily: 'inherit', fontSize: '11px', fontWeight: 'bold' }}>
-        {formatDZD(detail.eauHT + detail.rfaHT)}
+      {/* Tranches progressives T1→T4 (groupe A)
+          CORRECTION PA : QE11→PA11, QE12→PA12, QE13→PA13, QE14→PA14 */}
+      {isGroupeA && ([
+        { qe: fc.qe11, pe: fc.pe11, pa: fc.pa11, topEau: '10.1cm', topAss: '14.8cm' },
+        { qe: fc.qe12, pe: fc.pe12, pa: fc.pa12, topEau: '10.7cm', topAss: '15.4cm' },
+        { qe: fc.qe13, pe: fc.pe13, pa: fc.pa13, topEau: '11.3cm', topAss: '16.0cm' },
+        { qe: fc.qe14, pe: fc.pe14, pa: fc.pa14, topEau: '11.9cm', topAss: '16.6cm' },
+      ]).map(({ qe, pe, pa, topEau, topAss }, i) => qe > 0 && (
+        <React.Fragment key={i}>
+          {/* Eau */}
+          <div style={{ position: 'absolute', right: C_QTE, top: topEau, ...colQte }}>{qe}</div>
+          <div style={{ position: 'absolute', right: C_PRIX, top: topEau, ...colPrix }}>{formatDZD(pe)}</div>
+          <div style={{ position: 'absolute', right: C_MONTANT, top: topEau, ...colMontant }}>{formatDZD(qe * pe)}</div>
+          {/* Assainissement (si PA > 0) */}
+          {pa > 0 && (
+            <>
+              <div style={{ position: 'absolute', right: C_QTE, top: topAss, ...colQte }}>{qe}</div>
+              <div style={{ position: 'absolute', right: C_PRIX, top: topAss, ...colPrix }}>{formatDZD(pa)}</div>
+              <div style={{ position: 'absolute', right: C_MONTANT, top: topAss, ...colMontant }}>{formatDZD(qe * pa)}</div>
+            </>
+          )}
+        </React.Fragment>
+      ))}
+
+      {/* Tranche unique eau (puits / industriel / grand compte) */}
+      {isTrUnique && fc.qeun > 0 && (
+        <>
+          <div style={{ position: 'absolute', right: C_QTE, top: '12.5cm', ...colQte }}>{fc.qeun}</div>
+          <div style={{ position: 'absolute', right: C_PRIX, top: '12.5cm', ...colPrix }}>{formatDZD(fc.peun)}</div>
+          <div style={{ position: 'absolute', right: C_MONTANT, top: '12.5cm', ...colMontant }}>{formatDZD(fc.qeun * fc.peun)}</div>
+        </>
+      )}
+
+      {/* Sous-Total Eau (1) = eauHT + rfaHT */}
+      <div style={{ position: 'absolute', right: '14.5cm', top: '13.1cm', fontFamily: 'inherit', fontSize: '11px', direction: 'rtl', fontWeight: 'bold' }}>
+
+      </div>
+      <div style={{ position: 'absolute', right: C_MONTANT, top: '13.1cm', ...colMontant, fontWeight: 'bold' }}>
+        {formatDZD(detail.sousTotal1)}
       </div>
 
-      {/* RFASS */}
+      {/* ======================================================= */}
+      {/* SECTION ASSAINISSEMENT                                   */}
+      {/* ======================================================= */}
+
+      {/* RFASS — montant seul */}
       {detail.rfassHT > 0 && (
-        <div style={{ position: 'absolute', right: '17cm', top: '14cm', width: '4cm', textAlign: 'right', fontFamily: 'inherit', fontSize: '11px' }}>
+        <div style={{ position: 'absolute', right: C_MONTANT, top: '14.0cm', ...colMontant }}>
           {formatDZD(detail.rfassHT)}
         </div>
       )}
 
-      {/* Sous-total Assainissement HT */}
-      {detail.assHT > 0 && (
-        <div style={{ position: 'absolute', right: '17cm', top: '16.5cm', width: '4cm', textAlign: 'right', fontFamily: 'inherit', fontSize: '11px', fontWeight: 'bold' }}>
-          {formatDZD(detail.rfassHT + detail.assHT)}
-        </div>
-      )}
-
-
-      {/* Sous-total HT (1)+(2) = Eau+RFA + Ass+RFASS  (sans RQE/REE/RDG) */}
-      <div style={{ position: 'absolute', right: '17cm', top: '17.2cm', width: '4cm', textAlign: 'right', fontFamily: 'inherit', fontSize: '11px', fontWeight: 'bold' }}>
-        {formatDZD(detail.eauHT + detail.rfaHT + detail.assHT + detail.rfassHT)}
-      </div>
-
-      {/* TVA Eau */}
-      {detail.tvaEau > 0 && (
+      {/* Tranche unique assainissement PAUN (groupes C / E) */}
+      {isTrUnique && fc.paun > 0 && fc.qeun > 0 && (
         <>
-          <div style={{ position: 'absolute', right: '7cm', top: '20.5cm', fontFamily: 'inherit', fontSize: '11px' }}>
-            {fc.tveau}%
-          </div>
-          <div style={{ position: 'absolute', right: '1cm', top: '20.5cm', width: '4cm', textAlign: 'right', fontFamily: 'inherit', fontSize: '11px' }}>
-            {formatDZD(detail.tvaEau)}
-          </div>
+          <div style={{ position: 'absolute', right: C_QTE, top: '17.2cm', ...colQte }}>{fc.qeun}</div>
+          <div style={{ position: 'absolute', right: C_PRIX, top: '17.2cm', ...colPrix }}>{formatDZD(fc.paun)}</div>
+          <div style={{ position: 'absolute', right: C_MONTANT, top: '17.2cm', ...colMontant }}>{formatDZD(fc.qeun * fc.paun)}</div>
         </>
       )}
 
-      {/* RDG */}
+      {/* Assainissement taux % (groupe A/D sans PAUN) */}
+      {fc.type === 'E' && fc.ass > 0 && fc.paun === 0 && fc.pa12 === 0 && detail.assHT > 0 && (
+        <div style={{ position: 'absolute', right: C_MONTANT, top: '17.2cm', ...colMontant }}>
+          {formatDZD(detail.assHT)}
+        </div>
+      )}
+
+      {/* Sous-Total Assainissement (2) = assHT + rfassHT */}
+      <div style={{ position: 'absolute', right: '14.5cm', top: '17.9cm', fontFamily: 'inherit', fontSize: '11px', direction: 'rtl', fontWeight: 'bold' }}>
+
+      </div>
+      <div style={{ position: 'absolute', right: C_MONTANT, top: '17.9cm', ...colMontant, fontWeight: 'bold' }}>
+        {formatDZD(detail.sousTotal2)}
+      </div>
+
+      {/* ======================================================= */}
+      {/* SOUS-TOTAL HT (1)+(2)                                    */}
+      {/* ======================================================= */}
+
+      <div style={{ position: 'absolute', right: '14.5cm', top: '18.6cm', fontFamily: 'inherit', fontSize: '11px', direction: 'rtl', fontWeight: 'bold' }}>
+
+      </div>
+      <div style={{ position: 'absolute', right: C_MONTANT, top: '18.6cm', ...colMontant, fontWeight: 'bold' }}>
+        {formatDZD(detail.sousTotal12)}
+      </div>
+
+      {/* ======================================================= */}
+      {/* SECTION TAXES ET REDEVANCES                              */}
+      {/* ======================================================= */}
+
+      {/* TVA : assiette = sousTotal12, taux = tveau, montant = tvaTotal */}
+      {tvaTotal > 0 && (
+        <>
+          <div style={{ position: 'absolute', right: C_QTE, top: '19.7cm', ...colMontant }}>{formatDZD(tvaAssiette)}</div>
+          <div style={{ position: 'absolute', right: T_TAUX, top: '19.7cm', ...colMontant }}>{formatDZD(fc.tveau)}</div>
+          <div style={{ position: 'absolute', right: T_MONTANT, top: '19.7cm', ...colMontant }}>{formatDZD(tvaTotal)}</div>
+        </>
+      )}
+
+      {/* RDG : assiette = qte (m³), taux = rdg (DZD/m³) */}
       {detail.rdgMontant > 0 && (
-        <div style={{ position: 'absolute', right: '1cm', top: '21.8cm', width: '4cm', textAlign: 'right', fontFamily: 'inherit', fontSize: '11px' }}>
-          {formatDZD(detail.rdgMontant)}
-        </div>
+        <>
+          <div style={{ position: 'absolute', right: C_QTE, top: '20.3cm', ...colMontant }}>{fc.qte}</div>
+          <div style={{ position: 'absolute', right: T_TAUX, top: '20.3cm', ...colMontant }}>{formatDZD(fc.rdg)}</div>
+          <div style={{ position: 'absolute', right: T_MONTANT, top: '20.3cm', ...colMontant }}>{formatDZD(detail.rdgMontant)}</div>
+        </>
       )}
 
-      {/* RQE */}
+      {/* RQE : assiette = eauHT, taux = rqe% */}
       {detail.rqeMontant > 0 && (
-        <div style={{ position: 'absolute', right: '1cm', top: '22.4cm', width: '4cm', textAlign: 'right', fontFamily: 'inherit', fontSize: '11px' }}>
-          {formatDZD(detail.rqeMontant)}
-        </div>
+        <>
+          <div style={{ position: 'absolute', right: C_QTE, top: '20.9cm', ...colMontant }}>{formatDZD(detail.eauHT)}</div>
+          <div style={{ position: 'absolute', right: T_TAUX, top: '20.9cm', ...colMontant }}>{formatDZD(fc.rqe)}</div>
+          <div style={{ position: 'absolute', right: T_MONTANT, top: '20.9cm', ...colMontant }}>{formatDZD(detail.rqeMontant)}</div>
+        </>
       )}
 
-      {/* REE */}
+      {/* REE : assiette = eauHT, taux = ree% */}
       {detail.reeMontant > 0 && (
-        <div style={{ position: 'absolute', right: '1cm', top: '23.0cm', width: '4cm', textAlign: 'right', fontFamily: 'inherit', fontSize: '11px' }}>
-          {formatDZD(detail.reeMontant)}
-        </div>
+        <>
+          <div style={{ position: 'absolute', right: C_QTE, top: '21.5cm', ...colMontant }}>{formatDZD(detail.eauHT)}</div>
+          <div style={{ position: 'absolute', right: T_TAUX, top: '21.5cm', ...colMontant }}>{formatDZD(fc.ree)}</div>
+          <div style={{ position: 'absolute', right: T_MONTANT, top: '21.5cm', ...colMontant }}>{formatDZD(detail.reeMontant)}</div>
+        </>
       )}
 
-      {/* Montant de la Facture TTC */}
-      <div style={{ position: 'absolute', right: '1cm', top: '24.5cm', width: '4cm', textAlign: 'right', fontFamily: 'inherit', fontSize: '12px', fontWeight: 'bold' }}>
+      {/* Sous-Total Taxes (3) */}
+      <div style={{ position: 'absolute', right: T_MONTANT, top: '22.1cm', ...colMontant, fontWeight: 'bold' }}>
+        {formatDZD(detail.sousTotal3)}
+      </div>
+
+      {/* ======================================================= */}
+      {/* TOTAUX FINAUX                                            */}
+      {/* ======================================================= */}
+
+      {/* Montant de la Facture TTC (1)+(2)+(3) */}
+      <div style={{ position: 'absolute', right: C_QTE, top: '22.8cm', width: '2.5cm', textAlign: 'right', fontFamily: 'inherit', fontSize: '12px', fontWeight: 'bold' }}>
         {formatDZD(detail.montantTTC)}
       </div>
 
-      {/* Timbre */}
+      {/* Dus antérieurs */}
+      <div style={{ position: 'absolute', right: C_QTE, top: '23.9cm', width: '2.5cm', textAlign: 'right', fontFamily: 'inherit', fontSize: '11px' }}>
+        {formatDZD(dusAnterieurs)}
+      </div>
+
+      {/* Montant sans timbre = TTC + Dus antérieurs */}
+      <div style={{ position: 'absolute', right: C_QTE, top: '24.5cm', width: '2.5cm', textAlign: 'right', fontFamily: 'inherit', fontSize: '11px' }}>
+        {formatDZD(montantSansTimbre)}
+      </div>
+
+      {/* Timbre fiscal */}
       {timbre > 0 && (
-        <div style={{ position: 'absolute', right: '1cm', top: '25.8cm', width: '4cm', textAlign: 'right', fontFamily: 'inherit', fontSize: '11px' }}>
+        <div style={{ position: 'absolute', right: C_QTE, top: '25.1cm', width: '2.5cm', textAlign: 'right', fontFamily: 'inherit', fontSize: '11px' }}>
           {formatDZD(timbre)}
         </div>
       )}
 
       {/* Net à Payer */}
-      <div style={{ position: 'absolute', right: '1cm', top: '26.5cm', width: '4cm', textAlign: 'right', fontFamily: 'inherit', fontSize: '13px', fontWeight: 'bold' }}>
+      <div style={{ position: 'absolute', right: C_QTE, top: '25.8cm', width: '2.5cm', textAlign: 'right', fontFamily: 'inherit', fontSize: '13px', fontWeight: 'bold' }}>
         {formatDZD(netAPayer)}
       </div>
 

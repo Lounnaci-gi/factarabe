@@ -1,7 +1,11 @@
 /**
  * calcFacture.ts
- * Logique de calcul du montant TTC des factures d'eau (ADE)
- * Couvre tous les types de documents et groupes d'abonnés identifiés.
+ * Logique de calcul du montant TTC des factures d'eau (ADE / EPEOR)
+ *
+ * Corrections v2 :
+ * - PA mapping groupe A : QE11→PA12, QE12→PA13, QE13→PA14, QE14→PAUN
+ * - montantHT (Sous-Total HT affiché) = EauHT + RFA + AssHT + RFASS
+ *   (RQE/REE/RDG sont dans la section taxes, pas dans le HT)
  */
 
 // ─────────────────────────────────────────────────────────────
@@ -9,44 +13,42 @@
 // ─────────────────────────────────────────────────────────────
 
 export interface FactureCalc {
-  // Type de document
-  type: string;       // 'E' | 'A' | 'B' | 'C' | 'D' | 'G' | 'X' | '2' | '4' | '6' | '7' | ...
+  type: string;
 
-  // Type d'abonné
-  typabon: number;    // 10-49
+  typabon: number;
 
-  // Quantités et prix par tranche (TYPE='E', groupe A)
   qe11: number; pe11: number;
   qe12: number; pe12: number;
   qe13: number; pe13: number;
   qe14: number; pe14: number;
 
-  // Tranche unique (TYPE='E', groupes C/D/E)
   qeun: number; peun: number;
 
-  // Prix assainissement par tranche (PA11..PA14 — réservé usage futur)
+  // PA mapping (groupe A) :
+  //   pa11 = prix ass tranche 1 (0-25 m³)
+  //   pa12 = prix ass tranche 2 (26-55 m³)
+  //   pa13 = prix ass tranche 3 (56-82 m³)
+  //   pa14 = prix ass tranche 4 (>=83 m³)
+  //   paun = prix ass tranche unique
   pa11: number; pa12: number;
   pa13: number; pa14: number;
-  paun: number;   // prix unitaire assainissement (groupes C et E)
+  paun: number;
 
-  // Redevances fixes
-  rfa: number;    // redevance fixe abonnement eau
-  tvrfa: number;  // taux TVA sur RFA (%)
-  rfass: number;  // redevance fixe abonnement assainissement
+  rfa: number;
+  tvrfa: number;
+  rfass: number;
 
-  // Taux
-  tveau: number;  // taux TVA eau (%) — ou montant forfaitaire HT si type≠'E' et PEUN=1
-  tvass: number;  // taux TVA assainissement (%)
-  ass: number;    // taux assainissement (%) — groupes A et D
-  rqe: number;    // taux redevance qualité eau (%)
-  ree: number;    // taux redevance économie eau (%)
-  rdg: number;    // redevance gestion (DZD/m³)
+  tveau: number;
+  tvass: number;
+  ass: number;
+  rqe: number;
+  ree: number;
+  rdg: number;
 
-  // Quantité totale consommée
   qte: number;
 }
 
-interface DetailFacture {
+export interface DetailFacture {
   // Eau
   eauHT: number;
   tvaEau: number;
@@ -63,13 +65,24 @@ interface DetailFacture {
   assHT: number;
   tvaAss: number;
 
-  // Redevances annexes
+  // Redevances annexes (section taxes)
   rqeMontant: number;
   reeMontant: number;
   rdgMontant: number;
 
-  // Total
-  montantHT: number;
+  // Sous-Total Eau (1) = EauHT + RFA
+  sousTotal1: number;
+
+  // Sous-Total Assainissement (2) = AssHT + RFASS
+  sousTotal2: number;
+
+  // Sous-Total HT affiché ligne (1)+(2)
+  sousTotal12: number;
+
+  // Sous-Total Taxes affiché ligne (3)
+  sousTotal3: number;
+
+  // Total TTC = sousTotal12 + sousTotal3
   montantTTC: number;
 }
 
@@ -80,80 +93,68 @@ interface DetailFacture {
 type Groupe = 'A' | 'B' | 'C' | 'D' | 'E_GROUP';
 
 const getGroupe = (typabon: number): Groupe => {
-  if (typabon === 15)                       return 'B';        // Puits
-  if (typabon >= 10 && typabon <= 19)       return 'A';        // Domestique (tranches)
-  if (typabon >= 20 && typabon <= 29)       return 'C';        // Industriel
-  if (typabon >= 30 && typabon <= 39)       return 'D';        // Sans compteur
-  if (typabon >= 40 && typabon <= 49)       return 'E_GROUP';  // Grand compte
-  return 'A'; // fallback
+  if (typabon === 15) return 'B';
+  if (typabon >= 10 && typabon <= 19) return 'A';
+  if (typabon >= 20 && typabon <= 29) return 'C';
+  if (typabon >= 30 && typabon <= 39) return 'D';
+  if (typabon >= 40 && typabon <= 49) return 'E_GROUP';
+  return 'A';
 };
 
 // ─────────────────────────────────────────────────────────────
-// Calcul Eau HT selon groupe
+// Calcul Eau HT
 // ─────────────────────────────────────────────────────────────
 
 const calcEauHT = (f: FactureCalc, groupe: Groupe): number => {
   switch (groupe) {
     case 'A':
-      // Tranches progressives
-      return (f.qe11 * f.pe11)
-           + (f.qe12 * f.pe12)
-           + (f.qe13 * f.pe13)
-           + (f.qe14 * f.pe14);
-
+      return (f.qe11 * f.pe11) + (f.qe12 * f.pe12)
+        + (f.qe13 * f.pe13) + (f.qe14 * f.pe14);
     case 'B':
-      // Puits : T1 seulement
       return f.qe11 * f.pe11;
-
     case 'C':
     case 'E_GROUP':
-      // Tranche unique
       return f.qte === 0 ? 0 : f.qeun * f.peun;
-
     case 'D':
-      // Sans compteur : forfait TVEAU si pas de consommation
       return f.qte === 0 ? f.tveau : f.qeun * f.peun;
-
     default:
       return 0;
   }
 };
 
 // ─────────────────────────────────────────────────────────────
-// Calcul ASS HT selon groupe
+// Calcul ASS HT
+// CORRECTION : groupe A → QE11 × PA12, QE12 × PA13, QE13 × PA14, QE14 × PAUN
 // ─────────────────────────────────────────────────────────────
 
 const calcAssHT = (eauHT: number, f: FactureCalc, groupe: Groupe): number => {
-  // Puits : pas d'assainissement
   if (groupe === 'B') return 0;
 
-  // Groupes C et E : prix unitaire par m³
   if (groupe === 'C' || groupe === 'E_GROUP') {
     return f.qte === 0 ? 0 : f.qeun * f.paun;
   }
 
-  // Groupe A : essayer PA par tranche en priorité, sinon taux %
   if (groupe === 'A') {
+    // PA mapping direct : qe11*pa11, qe12*pa12, qe13*pa13, qe14*pa14
+    // Arrondi par tranche pour éviter les écarts de centimes
     const assParTranches =
-      (f.qe11 * f.pa11) +
-      (f.qe12 * f.pa12) +
-      (f.qe13 * f.pa13) +
-      (f.qe14 * f.pa14);
+      Math.round(f.qe11 * f.pa11 * 100) / 100 +
+      Math.round(f.qe12 * f.pa12 * 100) / 100 +
+      Math.round(f.qe13 * f.pa13 * 100) / 100 +
+      Math.round(f.qe14 * f.pa14 * 100) / 100;
     if (assParTranches > 0) return assParTranches;
   }
 
-  // Groupes A et D (fallback) : taux % sur Eau HT
+  // Fallback : taux % sur Eau HT (ancien système ou groupe D)
   return eauHT * (f.ass / 100);
 };
 
 // ─────────────────────────────────────────────────────────────
-// TVA Eau — calculée par tranche pour groupe A (comme EPEOR)
+// TVA Eau (arrondi par tranche pour groupe A)
 // ─────────────────────────────────────────────────────────────
 
 const calcTvaEauHT = (eauHT: number, f: FactureCalc, groupe: Groupe): number => {
   if (groupe === 'A') {
-    // Arrondi par tranche pour reproduire le comportement exact du système EPEOR
-    // (évite l'écart de 1 centime dû à l'accumulation d'arrondis)
     return (
       Math.round(f.qe11 * f.pe11 * f.tveau) / 100 +
       Math.round(f.qe12 * f.pe12 * f.tveau) / 100 +
@@ -161,87 +162,107 @@ const calcTvaEauHT = (eauHT: number, f: FactureCalc, groupe: Groupe): number => 
       Math.round(f.qe14 * f.pe14 * f.tveau) / 100
     );
   }
-  return eauHT * (f.tveau / 100);
+  return Math.round(eauHT * f.tveau) / 100;
 };
 
 // ─────────────────────────────────────────────────────────────
-// Calcul principal — retourne le détail complet
+// TVA Assainissement (arrondi par tranche pour groupe A)
+// ─────────────────────────────────────────────────────────────
+
+const calcTvaAssHT = (assHT: number, f: FactureCalc, groupe: Groupe): number => {
+  if (groupe === 'A') {
+    return (
+      Math.round(f.qe11 * f.pa11 * f.tvass) / 100 +
+      Math.round(f.qe12 * f.pa12 * f.tvass) / 100 +
+      Math.round(f.qe13 * f.pa13 * f.tvass) / 100 +
+      Math.round(f.qe14 * f.pa14 * f.tvass) / 100
+    );
+  }
+  return Math.round(assHT * f.tvass) / 100;
+};
+
+// ─────────────────────────────────────────────────────────────
+// Calcul principal
 // ─────────────────────────────────────────────────────────────
 
 export const calcDetailFacture = (f: FactureCalc): DetailFacture => {
 
-  // ── TYPE ≠ 'E' : formule simplifiée ──────────────────────
+  // ── TYPE ≠ 'E' ─────────────────────────────────────────
   if (f.type !== 'E') {
-    const baseHT   = f.qeun * f.peun;
-    const tvaEau   = baseHT * (f.tveau / 100);
+    const baseHT = f.qeun * f.peun;
+    const tvaEau = baseHT * (f.tveau / 100);
     const montantTTC = Math.round((baseHT + tvaEau) * 100) / 100;
-
     return {
-      eauHT:       baseHT,
-      tvaEau,
-      rfaHT:       0,
-      tvaRfa:      0,
-      rfassHT:     0,
-      tvaRfass:    0,
-      assHT:       0,
-      tvaAss:      0,
-      rqeMontant:  0,
-      reeMontant:  0,
-      rdgMontant:  0,
-      montantHT:   baseHT,
+      eauHT: baseHT, tvaEau,
+      rfaHT: 0, tvaRfa: 0,
+      rfassHT: 0, tvaRfass: 0,
+      assHT: 0, tvaAss: 0,
+      rqeMontant: 0, reeMontant: 0, rdgMontant: 0,
+      sousTotal1: baseHT,
+      sousTotal2: 0,
+      sousTotal12: baseHT,
+      sousTotal3: tvaEau,
       montantTTC,
     };
   }
 
-  // ── TYPE = 'E' : formule complète ────────────────────────
-  const groupe  = getGroupe(f.typabon);
-  const eauHT   = calcEauHT(f, groupe);
-  const assHT   = calcAssHT(eauHT, f, groupe);
-  const hasRDG  = groupe !== 'B';
+  // ── TYPE = 'E' ──────────────────────────────────────────
+  const groupe = getGroupe(f.typabon);
+  const eauHT = calcEauHT(f, groupe);
+  const assHT = calcAssHT(eauHT, f, groupe);
+  const hasRDG = groupe !== 'B';
 
-  const tvaEau     = calcTvaEauHT(eauHT, f, groupe);  // arrondi par tranche pour groupe A
-  const rfaHT      = f.rfa;
-  const tvaRfa     = rfaHT  * (f.tvrfa  / 100);
-  const rfassHT    = f.rfass > 0 ? f.rfass : 0;
-  const tvaRfass   = rfassHT * (f.tvass  / 100);
-  const tvaAss     = assHT  * (f.tvass  / 100);
-  const rqeMontant = hasRDG ? eauHT * (f.rqe / 100) : 0;
-  const reeMontant = hasRDG ? eauHT * (f.ree / 100) : 0;
-  const rdgMontant = hasRDG ? f.qte * f.rdg          : 0;
+  const tvaEau = calcTvaEauHT(eauHT, f, groupe);
+  const rfaHT = f.rfa;
+  const tvaRfa = Math.round(rfaHT * (f.tvrfa / 100) * 100) / 100;
+  const rfassHT = f.rfass > 0 ? f.rfass : 0;
+  const tvaRfass = Math.round(rfassHT * (f.tvass / 100) * 100) / 100;
+  const tvaAss = calcTvaAssHT(assHT, f, groupe);
+  const rqeMontant = hasRDG ? Math.round(eauHT * (f.rqe / 100) * 100) / 100 : 0;
+  const reeMontant = hasRDG ? Math.round(eauHT * (f.ree / 100) * 100) / 100 : 0;
+  const rdgMontant = hasRDG ? Math.round(f.qte * f.rdg * 100) / 100 : 0;
 
-  const montantHT =
-    eauHT + rfaHT + rfassHT + assHT
-    + rqeMontant + reeMontant + rdgMontant;
+  // Sous-Total Eau (1)
+  const sousTotal1 = eauHT + rfaHT;
 
-  const montantTTC = Math.round((
-    eauHT    + tvaEau
-  + rfaHT    + tvaRfa
-  + rfassHT  + tvaRfass
-  + assHT    + tvaAss
-  + rqeMontant
-  + reeMontant
-  + rdgMontant
-  ) * 100) / 100;
+  // Sous-Total Assainissement (2)
+  const sousTotal2 = assHT + rfassHT;
+
+  // Sous-Total HT (1)+(2) : affiché sur la facture SANS RQE/REE/RDG
+  const sousTotal12 = sousTotal1 + sousTotal2;
+
+  // TVA s'applique sur sousTotal12 (même taux pour eau, rfa, ass, rfass)
+  const tvaTotal = tvaEau + tvaRfa + tvaRfass + tvaAss;
+
+  // Sous-Total Taxes (3)
+  const sousTotal3 = Math.round((tvaTotal + rqeMontant + reeMontant + rdgMontant) * 100) / 100;
+
+  // Total TTC = (1)+(2)+(3)
+  const montantTTC = Math.round((sousTotal12 + sousTotal3) * 100) / 100;
 
   return {
-    eauHT,
-    tvaEau,
-    rfaHT,
-    tvaRfa,
-    rfassHT,
-    tvaRfass,
-    assHT,
-    tvaAss,
-    rqeMontant,
-    reeMontant,
-    rdgMontant,
-    montantHT,
+    eauHT, tvaEau,
+    rfaHT, tvaRfa,
+    rfassHT, tvaRfass,
+    assHT, tvaAss,
+    rqeMontant, reeMontant, rdgMontant,
+    sousTotal1,
+    sousTotal2,
+    sousTotal12,
+    sousTotal3,
     montantTTC,
   };
 };
 
 // ─────────────────────────────────────────────────────────────
-// Helper : formatage monétaire DZD
+// Helper : montant TTC uniquement
+// ─────────────────────────────────────────────────────────────
+
+export const calcMontantTC = (f: FactureCalc): number =>
+  calcDetailFacture(f).montantTTC;
+
+// ─────────────────────────────────────────────────────────────
+// Formatage monétaire DZD
 // ─────────────────────────────────────────────────────────────
 
 export const formatDZD = (value: number): string =>

@@ -91,9 +91,19 @@ const FactureDetail: React.FC<{ f: Facture }> = ({ f }) => {
           {/* ── RFA ── */}
           {d.rfaHT > 0 && <Row label="اشتراك ثابت ماء (RFA)" value={formatDZD(d.rfaHT)} />}
 
+          {/* ── Sous-total Eau ── */}
+          {(d.sousTotal1 > 0) && (
+            <Row label="مجموع الماء (1) HT" value={formatDZD(d.sousTotal1)} bold />
+          )}
+
           {/* ── Assainissement ── */}
           {d.assHT > 0   && <Row label="صرف صحي HT"               value={formatDZD(d.assHT)} />}
           {d.rfassHT > 0 && <Row label="اشتراك ثابت صرف (RFASS)"  value={formatDZD(d.rfassHT)} />}
+
+          {/* ── Sous-total Assainissement ── */}
+          {(d.sousTotal2 > 0) && (
+            <Row label="مجموع التطهير (2) HT" value={formatDZD(d.sousTotal2)} bold />
+          )}
 
           {/* ── Redevances annexes ── */}
           {d.rdgMontant > 0 && <Row label="رسم التسيير (RDG)"             value={formatDZD(d.rdgMontant)} />}
@@ -103,10 +113,10 @@ const FactureDetail: React.FC<{ f: Facture }> = ({ f }) => {
           {/* ── Total HT ── */}
           <tr style={{ background: '#f0fdf4', borderTop: '2px solid #86efac' }}>
             <td style={{ padding: '5px 14px', fontWeight: 'bold', fontSize: '12px', direction: 'rtl', textAlign: 'right', color: '#166534' }}>
-              المجموع خارج الرسم HT
+              المجموع (1)+(2) خارج الرسم HT
             </td>
             <td style={{ padding: '5px 14px', fontWeight: 'bold', fontSize: '12px', textAlign: 'right', fontFamily: 'monospace', color: '#166534' }}>
-              {formatDZD(d.montantHT)}
+              {formatDZD(d.sousTotal12)}
             </td>
           </tr>
 
@@ -210,6 +220,7 @@ export const FacturesList: React.FC<FacturesListProps> = ({ factures, onPrint })
               <th>Conso</th>
               <th>Montant</th>
               <th>Statut</th>
+              <th>Date de Paiement</th>
               <th>État Cpt</th>
               <th style={{ textAlign: 'center' }}>Action</th>
             </tr>
@@ -217,7 +228,7 @@ export const FacturesList: React.FC<FacturesListProps> = ({ factures, onPrint })
           <tbody>
             {filteredFactures.length === 0 ? (
               <tr>
-                <td colSpan={9} style={{ textAlign: 'center', color: '#9CA3AF' }}>
+                <td colSpan={10} style={{ textAlign: 'center', color: '#9CA3AF' }}>
                   Aucune facture trouvée.
                 </td>
               </tr>
@@ -244,10 +255,13 @@ export const FacturesList: React.FC<FacturesListProps> = ({ factures, onPrint })
                       </td>
                       <td>
                         {isPayee ? (
-                          <span className="badge badge-success">Payée le {f.date_reglement}</span>
+                          <span className="badge badge-success">Payée</span>
                         ) : (
                           <span className="badge badge-error">Impayée</span>
                         )}
+                      </td>
+                      <td>
+                        {isPayee && f.date_reglement ? f.date_reglement : '-'}
                       </td>
                       <td>
                         <span className="badge" style={{ backgroundColor: '#e2e8f0', color: '#475569', direction: 'rtl', display: 'inline-block' }}>
@@ -268,7 +282,7 @@ export const FacturesList: React.FC<FacturesListProps> = ({ factures, onPrint })
                     {/* ── Panneau de détail tranches ── */}
                     {isExpanded && (
                       <tr>
-                        <td colSpan={9} style={{ padding: 0, background: 'transparent' }}>
+                        <td colSpan={10} style={{ padding: 0, background: 'transparent' }}>
                           <FactureDetail f={f} />
                         </td>
                       </tr>
