@@ -1,4 +1,4 @@
-import { FactureCalc } from './utils/calcFacture';
+import type { FactureCalc } from './utils/calcFacture';
 
 export interface Facture {
   id: string;

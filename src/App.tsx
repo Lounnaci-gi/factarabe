@@ -6,6 +6,7 @@ import { AbonneCard } from './components/AbonneCard';
 import { FacturesList } from './components/FacturesList';
 import { InvoicePrint } from './components/InvoicePrint';
 import { InvoicesTablePrint } from './components/InvoicesTablePrint';
+import { PaymentStats } from './components/PaymentStats';
 import type { Facture } from './types';
 
 export default function App() {
@@ -67,6 +68,7 @@ export default function App() {
       {!isLoading && data && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', marginTop: '20px', animation: 'fadeIn 0.3s ease-in-out' }}>
           <AbonneCard key={data.abonne.numab} abonne={data.abonne} />
+          <PaymentStats factures={data.factures} />
           <FacturesList 
             factures={data.factures} 
             onPrint={(f) => {
