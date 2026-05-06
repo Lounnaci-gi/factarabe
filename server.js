@@ -260,7 +260,8 @@ app.get('/api/abonne/:numab', async (req, res) => {
 
   // Mapper les champs de votre DBF vers l'interface React
   // (J'essaie de deviner les colonnes classiques : NOM_PRENOM, ADRESSE, etc.)
-  const codrue = abonneRecord.CODRUE ? abonneRecord.CODRUE.toString().trim() : '';
+  const rawCodrue = abonneRecord.CODRUE ? abonneRecord.CODRUE.toString().trim() : '';
+  const codrue = rawCodrue.replace(/^0+/, '');
   const nomRue = ruesMap.get(codrue)?.NOUVNOM || '?';
 
   let adresseStr = typeof nomRue === 'string' ? nomRue.trim() : '?';
@@ -285,7 +286,7 @@ app.get('/api/abonne/:numab', async (req, res) => {
     nom_arabe: t.nom_arabe || abonneRecord.RAISOCA || null,
     adresse: adresseStr,
     ville: "---",
-    rue_arabe: t.rue_arabe || (typeof nomRueArabe === 'string' && nomRueArabe.trim() !== '' ? nomRueArabe.trim() : null),
+    rue_arabe: t.rue_arabe || translationsDB[`RUE_${codrue}`] || (typeof nomRueArabe === 'string' && nomRueArabe.trim() !== '' ? nomRueArabe.trim() : null),
     bloc_arabe: t.bloc_arabe || null,
     ndom_arabe: t.ndom_arabe || null,
     type_abonne: typeAbonneStr,
@@ -369,7 +370,14 @@ app.post('/api/abonne/:numab/traduction', (req, res) => {
   if (!translationsDB[numab]) translationsDB[numab] = {};
 
   if (nom_arabe !== undefined) translationsDB[numab].nom_arabe = nom_arabe;
-  if (rue_arabe !== undefined) translationsDB[numab].rue_arabe = rue_arabe;
+  if (rue_arabe !== undefined) {
+    translationsDB[numab].rue_arabe = rue_arabe;
+    // Sauvegarde globale pour la rue (partagée par CODRUE)
+    const abonneRec = abonnesMap.get(numab);
+    const rawCod = abonneRec?.CODRUE ? abonneRec.CODRUE.toString().trim() : null;
+    const cod = rawCod ? rawCod.replace(/^0+/, '') : null;
+    if (cod && rue_arabe) translationsDB[`RUE_${cod}`] = rue_arabe;
+  }
   if (bloc_arabe !== undefined) translationsDB[numab].bloc_arabe = bloc_arabe;
   if (ndom_arabe !== undefined) translationsDB[numab].ndom_arabe = ndom_arabe;
   if (type_abonne_arabe !== undefined) {

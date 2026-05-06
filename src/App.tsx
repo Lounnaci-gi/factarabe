@@ -7,6 +7,7 @@ import { FacturesList } from './components/FacturesList';
 import { InvoicePrint } from './components/InvoicePrint';
 import { InvoicesTablePrint } from './components/InvoicesTablePrint';
 import { PaymentStats } from './components/PaymentStats';
+import { PaymentDurationChart } from './components/PaymentDurationChart';
 import type { Facture } from './types';
 
 export default function App() {
@@ -22,11 +23,12 @@ export default function App() {
     setError(null);
     
     // Appel du service (qui simule le NTX)
-    const result = await performSeek(numab);
-    
-    if (result) {
+    try {
+      const response = await fetch(`http://${window.location.hostname}:3001/api/abonne/${numab}`);
+      if (!response.ok) throw new Error("Abonné non trouvé");
+      const result = await response.json();
       setData(result);
-    } else {
+    } catch (err) {
       setData(null);
       setError(`Aucun abonné trouvé pour le code : ${numab}`);
     }
@@ -68,7 +70,10 @@ export default function App() {
       {!isLoading && data && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', marginTop: '20px', animation: 'fadeIn 0.3s ease-in-out' }}>
           <AbonneCard key={data.abonne.numab} abonne={data.abonne} />
-          <PaymentStats factures={data.factures} />
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '20px' }}>
+            <PaymentStats factures={data.factures} />
+            <PaymentDurationChart factures={data.factures} />
+          </div>
           <FacturesList 
             factures={data.factures} 
             onPrint={(f) => {
