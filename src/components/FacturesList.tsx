@@ -175,10 +175,11 @@ const FactureDetail: React.FC<FactureDetailProps> = ({ facture, allFactures }) =
 interface FacturesListProps {
   factures: Facture[];
   onPrint: (facture: Facture) => void;
+  onPrintTable: () => void;
 }
 
 // ─── Composant principal ──────────────────────────────────────
-export const FacturesList: React.FC<FacturesListProps> = ({ factures, onPrint }) => {
+export const FacturesList: React.FC<FacturesListProps> = ({ factures, onPrint, onPrintTable }) => {
   const [currentPage,  setCurrentPage]  = useState(1);
   const [statusFilter, setStatusFilter] = useState<'all' | 'payee' | 'impayee'>('all');
   const [expandedId,   setExpandedId]   = useState<string | null>(null);
@@ -224,6 +225,13 @@ export const FacturesList: React.FC<FacturesListProps> = ({ factures, onPrint })
             <option value="payee">Factures Payées</option>
             <option value="impayee">Factures Impayées</option>
           </select>
+          <button
+            className="pagination-btn"
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#EFF6FF', borderColor: '#BFDBFE', color: '#1E40AF' }}
+            onClick={onPrintTable}
+          >
+            🖨️ Imprimer Liste
+          </button>
         </div>
       </div>
 

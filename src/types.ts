@@ -19,6 +19,8 @@ export interface Facture {
   nouveau_index: number;
   consommation: number;
   timbre: number;
+  paiement: string;
+  numrec: string;
   calc_data: FactureCalc;
 }
 

@@ -78,7 +78,12 @@ async function loadAbonnes() {
 
     console.log("Chargement de FACTURES.DBF en mémoire (cela prend ~25 secondes)...");
     const dbfFactures = await DBFFile.open('D:\\EPEOR\\FACTURES.DBF', { encoding: 'win1256' });
+    let firstFact = true;
     for await (const r of dbfFactures) {
+      if (firstFact) {
+        console.log("Structure d'une facture :", Object.keys(r));
+        firstFact = false;
+      }
       let n = r.NUMAB ? r.NUMAB.toString().replace(/\x00/g, '').trim().toUpperCase() : '';
       if (n) {
         if (!facturesMap.has(n)) facturesMap.set(n, []);
@@ -92,21 +97,27 @@ async function loadAbonnes() {
 
           const year = dFactRaw.slice(0, 4);
           const month = dFactRaw.slice(4, 6);
+          const typeFact = r.TYPE ? r.TYPE.toString().trim() : '';
           const periode = r.PERIODE ? r.PERIODE.toString().trim() : '';
 
-          if (periode === '1') {
-            const monthNames = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
-            const monthIndex = parseInt(month, 10) - 1;
-            const monthName = monthIndex >= 0 && monthIndex < 12 ? monthNames[monthIndex] : month;
+          const monthNames = ["جانفي", "فيفري", "مارس", "أفريل", "ماي", "جوان", "جويلية", "أوت", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+          const monthIndex = parseInt(month, 10) - 1;
+          const monthName = monthIndex >= 0 && monthIndex < 12 ? monthNames[monthIndex] : month;
+
+          if (typeFact !== 'E') {
             periodeLabel = `${monthName} ${year}`;
-          } else if (periode === '3') {
-            let trim = "";
-            if (month === '03') trim = "1er Trim";
-            else if (month === '06') trim = "2ème Trim";
-            else if (month === '09') trim = "3ème Trim";
-            else if (month === '12') trim = "4ème Trim";
-            else trim = `Mois ${month}`;
-            periodeLabel = `${trim} ${year}`;
+          } else {
+            if (periode === '1') {
+              periodeLabel = `${monthName} ${year}`;
+            } else if (periode === '3') {
+              let trim = "";
+              if (month === '03') trim = "الثلاثي الأول";
+              else if (month === '06') trim = "الثلاثي الثاني";
+              else if (month === '09') trim = "الثلاثي الثالث";
+              else if (month === '12') trim = "الثلاثي الرابع";
+              else trim = `شهر ${month}`;
+              periodeLabel = `${trim} ${year}`;
+            }
           }
         }
 
@@ -124,8 +135,10 @@ async function loadAbonnes() {
         let rawEtatCpt = r.ETATCPT ? r.ETATCPT.toString().trim() : '';
         let etatCptStr = rawEtatCpt ? (tabcodesMap.get("E" + rawEtatCpt) || `État ${rawEtatCpt}`) : "N/A";
 
+        const reference = `${dFactRaw.slice(0, 4)}-${dFactRaw.slice(4, 6)}/${r.TYPE ? r.TYPE.toString().trim() : ''}`;
+
         facturesMap.get(n).push({
-          id: r.NUMREC ? r.NUMREC.toString().trim() : Math.random().toString(36).substr(2, 9),
+          id: reference,
           numab: n,
           montant: Number(r.MONTTC) || 0,
           date_fact: dFact,
@@ -140,6 +153,8 @@ async function loadAbonnes() {
           nouveau_index: Number(r.NOUVELX) || 0,
           consommation: Number(r.QTE) || 0,
           timbre: Number(r.TIMBRE) || 0,
+          paiement: r.MODALITE ? r.MODALITE.toString().replace(/\x00/g, '').trim() : '',
+          numrec: r.NUMREC ? r.NUMREC.toString().trim() : '',
           calc_data: {
             type: r.TYPE ? r.TYPE.toString().trim() : '',
             typabon: Number(r.TYPABON) || 0,

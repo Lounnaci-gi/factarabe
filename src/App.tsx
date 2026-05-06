@@ -5,11 +5,13 @@ import { SearchBar } from './components/SearchBar';
 import { AbonneCard } from './components/AbonneCard';
 import { FacturesList } from './components/FacturesList';
 import { InvoicePrint } from './components/InvoicePrint';
+import { InvoicesTablePrint } from './components/InvoicesTablePrint';
 import type { Facture } from './types';
 
 export default function App() {
   const [data, setData] = useState<DossierRecherche | null>(null);
   const [selectedFacture, setSelectedFacture] = useState<Facture | null>(null);
+  const [isPrintingTable, setIsPrintingTable] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -60,20 +62,32 @@ export default function App() {
           <FacturesList 
             factures={data.factures} 
             onPrint={(f) => {
+              setIsPrintingTable(false);
               setSelectedFacture(f);
               setTimeout(() => window.print(), 100);
             }} 
+            onPrintTable={() => {
+              setSelectedFacture(null);
+              setIsPrintingTable(true);
+              setTimeout(() => window.print(), 100);
+            }}
           />
         </div>
       )}
 
       {/* Composant d'impression (masqué à l'écran) */}
-      {data && selectedFacture && (
+      {data && selectedFacture && !isPrintingTable && (
         <InvoicePrint 
           abonne={data.abonne} 
           facture={selectedFacture} 
           allFactures={data.factures} 
         />
+      )}
+
+      {data && isPrintingTable && (
+        <div className="print-container" style={{ width: '100%', height: 'auto', position: 'static' }}>
+          <InvoicesTablePrint abonne={data.abonne} factures={data.factures} />
+        </div>
       )}
 
       {/* Mini animation CSS intégrée pour la démo */}
