@@ -27,20 +27,8 @@ const toFC = (f: Facture): FactureCalc => ({
   qte:   Number(f.calc_data?.qte   ?? 0),
 });
 
-// ─── Mapping état compteur ────────────────────────────────────
-const getEtatCptLabel = (etat: string | number | undefined | null) => {
-  if (!etat) return etat;
-  const num = Number(etat);
-  if (isNaN(num)) return etat;
-  const map: Record<number, string> = {
-    10: 'في الخدمة', 11: 'بدون ماء', 12: 'خط غير مستخدم',
-    13: 'تجاوز المؤشر', 14: 'عداد مقطوع', 15: 'بئر',
-    16: 'قطعة أرض', 17: 'خزانة مغلقة', 18: 'منزل غير مسكون',
-    19: 'خط غير مستخدم', 20: 'متوقف', 30: 'بدون عداد',
-    40: 'ملغى', 41: 'غير موصول',
-  };
-  return map[num] ?? etat;
-};
+// ─── Mapping état compteur (désormais géré par le serveur) ───
+const getEtatCptLabel = (etat: any) => etat;
 
 // ─── Panneau détail tranches ──────────────────────────────────
 interface FactureDetailProps {
@@ -175,7 +163,7 @@ const FactureDetail: React.FC<FactureDetailProps> = ({ facture, allFactures }) =
 interface FacturesListProps {
   factures: Facture[];
   onPrint: (facture: Facture) => void;
-  onPrintTable: () => void;
+  onPrintTable: (filter: 'all' | 'impayee') => void;
 }
 
 // ─── Composant principal ──────────────────────────────────────
@@ -201,17 +189,17 @@ export const FacturesList: React.FC<FacturesListProps> = ({ factures, onPrint, o
   const paginate = (n: number) => setCurrentPage(n);
 
   return (
-    <div className="card">
+    <div className="card" style={{ direction: 'rtl' }}>
       {/* En-tête avec filtre */}
       <div className="card-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <span>Historique des Factures</span>
-          <span className="text-muted" style={{ fontSize: '12px', marginLeft: '12px' }}>
-            {filteredFactures.length} affichées sur {factures.length}
+          <span>سجل الفواتير</span>
+          <span className="text-muted" style={{ fontSize: '12px', marginRight: '12px' }}>
+            {filteredFactures.length} معروضة من أصل {factures.length}
           </span>
         </div>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <label style={{ fontSize: '12px', color: '#6B7280' }}>Filtrer par :</label>
+          <label style={{ fontSize: '12px', color: '#6B7280' }}>تصفية حسب:</label>
           <select
             className="rtl-input"
             style={{ padding: '4px 8px', fontSize: '13px', width: 'auto' }}
@@ -221,16 +209,25 @@ export const FacturesList: React.FC<FacturesListProps> = ({ factures, onPrint, o
               setCurrentPage(1);
             }}
           >
-            <option value="all">Toutes les factures</option>
-            <option value="payee">Factures Payées</option>
-            <option value="impayee">Factures Impayées</option>
+            <option value="all">جميع الفواتير</option>
+            <option value="payee">الفواتير المدفوعة</option>
+            <option value="impayee">الفواتير غير المدفوعة</option>
           </select>
           <button
             className="pagination-btn"
-            style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#EFF6FF', borderColor: '#BFDBFE', color: '#1E40AF' }}
-            onClick={onPrintTable}
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '6px', 
+              backgroundColor: '#3B82F6', 
+              borderColor: '#2563EB', 
+              color: '#FFFFFF',
+              fontWeight: 'bold',
+              padding: '6px 16px'
+            }}
+            onClick={() => onPrintTable(statusFilter)}
           >
-            🖨️ Imprimer Liste
+            🖨️ طباعة ({statusFilter === 'all' ? 'الكل' : statusFilter === 'payee' ? 'المدفوعة' : 'غير المدفوعة'})
           </button>
         </div>
       </div>
@@ -240,23 +237,23 @@ export const FacturesList: React.FC<FacturesListProps> = ({ factures, onPrint, o
         <table className="data-table">
           <thead>
             <tr>
-              <th>Période / Réf</th>
-              <th>Date Facturation</th>
-              <th>Ancien</th>
-              <th>Nouveau</th>
-              <th>Conso</th>
-              <th>Montant</th>
-              <th>Statut</th>
-              <th>Date de Paiement</th>
-              <th>État Cpt</th>
-              <th style={{ textAlign: 'center' }}>Action</th>
+              <th style={{ textAlign: 'right' }}>الفترة / المرجع</th>
+              <th style={{ textAlign: 'right' }}>تاريخ الفوترة</th>
+              <th style={{ textAlign: 'right' }}>القديم</th>
+              <th style={{ textAlign: 'right' }}>الجديد</th>
+              <th style={{ textAlign: 'right' }}>الاستهلاك</th>
+              <th style={{ textAlign: 'right' }}>المبلغ</th>
+              <th style={{ textAlign: 'right' }}>الحالة</th>
+              <th style={{ textAlign: 'right' }}>تاريخ الدفع</th>
+              <th style={{ textAlign: 'right' }}>حالة العداد</th>
+              <th style={{ textAlign: 'center' }}>إجراء</th>
             </tr>
           </thead>
           <tbody>
             {filteredFactures.length === 0 ? (
               <tr>
                 <td colSpan={10} style={{ textAlign: 'center', color: '#9CA3AF' }}>
-                  Aucune facture trouvée.
+                  لم يتم العثور على أي فاتورة.
                 </td>
               </tr>
             ) : (
@@ -271,20 +268,20 @@ export const FacturesList: React.FC<FacturesListProps> = ({ factures, onPrint, o
                     >
                       <td className="text-bold">
                         {f.periode_label}
-                        <div style={{ fontSize: '12px', color: '#9CA3AF', fontWeight: 'normal' }}>Réf: {f.id}</div>
+                        <div style={{ fontSize: '12px', color: '#9CA3AF', fontWeight: 'normal' }}>مرجع: {f.id}</div>
                       </td>
                       <td>{f.date_fact}</td>
                       <td>{f.ancien_index}</td>
                       <td>{f.nouveau_index}</td>
-                      <td className="text-bold" style={{ color: '#2563EB' }}>{f.consommation} m³</td>
-                      <td className="text-bold" style={{ textAlign: 'right', paddingRight: '32px' }}>
-                        {f.montant.toLocaleString('fr-DZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} DZD
+                      <td className="text-bold" style={{ color: '#2563EB' }}>{f.consommation} م³</td>
+                      <td className="text-bold" style={{ textAlign: 'left', paddingLeft: '32px' }}>
+                        {f.montant.toLocaleString('fr-DZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} دج
                       </td>
                       <td>
                         {isPayee ? (
-                          <span className="badge badge-success">Payée</span>
+                          <span className="badge badge-success">مدفوعة</span>
                         ) : (
-                          <span className="badge badge-error">Impayée</span>
+                          <span className="badge badge-error">غير مدفوعة</span>
                         )}
                       </td>
                       <td>
@@ -298,7 +295,7 @@ export const FacturesList: React.FC<FacturesListProps> = ({ factures, onPrint, o
                       <td style={{ textAlign: 'center' }}>
                         <button
                           className="btn-icon"
-                          title="Imprimer cette facture"
+                          title="طباعة هذه الفاتورة"
                           onClick={e => { e.stopPropagation(); onPrint(f); }}
                         >
                           🖨️
@@ -326,11 +323,11 @@ export const FacturesList: React.FC<FacturesListProps> = ({ factures, onPrint, o
       {totalPages > 1 && (
         <div className="pagination">
           <button onClick={() => paginate(currentPage - 1)} disabled={currentPage === 1} className="pagination-btn">
-            Précédent
+            السابق
           </button>
-          <span className="pagination-info">Page {currentPage} sur {totalPages}</span>
+          <span className="pagination-info">صفحة {currentPage} من {totalPages}</span>
           <button onClick={() => paginate(currentPage + 1)} disabled={currentPage === totalPages} className="pagination-btn">
-            Suivant
+            التالي
           </button>
         </div>
       )}

@@ -289,17 +289,24 @@ body {
 
   .print-container {
     display: block !important;
-    position: absolute;
-    left: 0;
-    top: 0;
+    position: relative;
     width: 21cm;
-    height: 29.7cm;
     background: white;
-    overflow: hidden;
+    margin: 0 auto;
   }
   
+  /* Pour l'invoice unique (position absolue) */
+  .print-container[style*="absolute"] {
+    height: 29.7cm;
+    overflow: hidden;
+  }
+
   @page {
     size: A4;
-    margin: 0;
+    margin: 15mm;
   }
+}
+
+html {
+  counter-reset: page;
 }

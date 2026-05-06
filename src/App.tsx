@@ -12,6 +12,7 @@ export default function App() {
   const [data, setData] = useState<DossierRecherche | null>(null);
   const [selectedFacture, setSelectedFacture] = useState<Facture | null>(null);
   const [isPrintingTable, setIsPrintingTable] = useState(false);
+  const [printFilter, setPrintFilter] = useState<'all' | 'impayee'>('all');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,6 +32,13 @@ export default function App() {
     
     setIsLoading(false);
   }, []);
+
+  const handlePrintTable = (filter: 'all' | 'impayee') => {
+    setSelectedFacture(null);
+    setPrintFilter(filter);
+    setIsPrintingTable(true);
+    setTimeout(() => window.print(), 100);
+  };
 
   return (
     <div className="app-container">
@@ -66,11 +74,7 @@ export default function App() {
               setSelectedFacture(f);
               setTimeout(() => window.print(), 100);
             }} 
-            onPrintTable={() => {
-              setSelectedFacture(null);
-              setIsPrintingTable(true);
-              setTimeout(() => window.print(), 100);
-            }}
+            onPrintTable={handlePrintTable}
           />
         </div>
       )}
@@ -86,7 +90,16 @@ export default function App() {
 
       {data && isPrintingTable && (
         <div className="print-container" style={{ width: '100%', height: 'auto', position: 'static' }}>
-          <InvoicesTablePrint abonne={data.abonne} factures={data.factures} />
+          <InvoicesTablePrint 
+            abonne={data.abonne} 
+            factures={
+              printFilter === 'all' 
+                ? data.factures 
+                : printFilter === 'payee'
+                  ? data.factures.filter(f => f.date_reglement)
+                  : data.factures.filter(f => !f.date_reglement)
+            } 
+          />
         </div>
       )}
 

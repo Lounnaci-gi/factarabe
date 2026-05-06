@@ -133,7 +133,14 @@ async function loadAbonnes() {
         if (dSaisieRaw.length === 8) dSaisie = `${dSaisieRaw.slice(0, 4)}-${dSaisieRaw.slice(4, 6)}-${dSaisieRaw.slice(6, 8)}`;
 
         let rawEtatCpt = r.ETATCPT ? r.ETATCPT.toString().trim() : '';
-        let etatCptStr = rawEtatCpt ? (tabcodesMap.get("E" + rawEtatCpt) || `État ${rawEtatCpt}`) : "N/A";
+        const etatMap = {
+          '10': 'في الخدمة', '11': 'بدون ماء', '12': 'خط غير مستخدم',
+          '13': 'تجاوز المؤشر', '14': 'عداد مقطوع', '15': 'بئر',
+          '16': 'قطعة أرض', '17': 'خزانة مغلقة', '18': 'منزل غير مسكون',
+          '19': 'خط غير مستخدم', '20': 'متوقف', '30': 'بدون عداد',
+          '40': 'ملغى', '41': 'غير موصول',
+        };
+        let etatCptStr = rawEtatCpt ? (etatMap[rawEtatCpt] || tabcodesMap.get("E" + rawEtatCpt) || `حالة ${rawEtatCpt}`) : "N/A";
 
         const reference = `${dFactRaw.slice(0, 4)}-${dFactRaw.slice(4, 6)}/${r.TYPE ? r.TYPE.toString().trim() : ''}`;
 
